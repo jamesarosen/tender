@@ -71,13 +71,31 @@ CREATE TABLE tasks (
   created_at TEXT NOT NULL,  -- ISO 8601 UTC
   started_at TEXT,  -- ISO 8601 UTC, for passive time tracking
   completed_at TEXT,  -- ISO 8601 UTC
-  duration_override INTEGER  -- minutes, user correction to passive tracking
+  deleted_at TEXT,  -- ISO 8601 UTC, soft delete
+  duration_override INTEGER,  -- minutes, user correction to passive tracking
+  blocked_by_task_id TEXT REFERENCES tasks(id),  -- optional blocker task
+  blocked_reason TEXT  -- optional freeform blocker description
 );
 
 CREATE INDEX tasks_template_id ON tasks(template_id);
 CREATE INDEX tasks_due_at ON tasks(due_at);
 CREATE INDEX tasks_completed_at ON tasks(completed_at);
+CREATE INDEX tasks_deleted_at ON tasks(deleted_at);
+CREATE INDEX tasks_blocked_by ON tasks(blocked_by_task_id);
 ```
+
+#### Soft Delete
+
+Tasks use soft delete via `deleted_at`. A task with `deleted_at IS NOT NULL` is considered deleted and should be excluded from normal queries. This preserves history and allows undo.
+
+#### Blockers
+
+Tasks can be blocked in two ways (both optional, can coexist):
+
+- **`blocked_by_task_id`** — FK to another task that must be completed first
+- **`blocked_reason`** — Freeform text describing what's blocking (e.g., "waiting for Sarah's address")
+
+The agent can discover blockers through conversation and offer to create a blocking task, linking it via `blocked_by_task_id`.
 
 ### signals
 
@@ -239,12 +257,25 @@ function getTaskDuration(task: Task): number | null {
 ### Querying by Tag
 
 ```sql
--- Find all tasks tagged "kitchen"
+-- Find all active tasks tagged "kitchen"
 SELECT * FROM tasks
 WHERE EXISTS (
   SELECT 1 FROM json_each(tags) WHERE value = 'kitchen'
 )
-AND completed_at IS NULL;
+AND completed_at IS NULL
+AND deleted_at IS NULL;
+```
+
+### Querying Blocked Tasks
+
+```sql
+-- Find tasks that are blocked
+SELECT t.*, blocker.description AS blocker_description
+FROM tasks t
+LEFT JOIN tasks blocker ON t.blocked_by_task_id = blocker.id
+WHERE t.deleted_at IS NULL
+  AND t.completed_at IS NULL
+  AND (t.blocked_by_task_id IS NOT NULL OR t.blocked_reason IS NOT NULL);
 ```
 
 ### Template Completion History
@@ -261,6 +292,7 @@ SELECT
 FROM tasks t
 WHERE t.template_id = :template_id
   AND t.completed_at IS NOT NULL
+  AND t.deleted_at IS NULL
 ORDER BY t.completed_at DESC;
 ```
 
