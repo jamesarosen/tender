@@ -11,38 +11,51 @@ Tender is a TypeScript monorepo with a local-first SQLite database and terminal 
 └─────────────────────────┬───────────────────────────────┘
                           │
           ┌───────────────┼───────────────┐
-          ▼               ▼               ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ @tender/tui  │  │@tender/domain│  │@tender/config│
-│    (Ink)     │─►│  (business)  │  │  (XDG, env)  │
-└──────────────┘  └──────┬───────┘  └──────────────┘
-                         │                 ▲
-                         ▼                 │
-                  ┌──────────────┐         │
-                  │  @tender/db  │─────────┘
-                  │   (Kysely)   │
-                  └──────────────┘
+          ▼               │               ▼
+   ┌─────────────┐        │        ┌──────────────┐
+   │@tender/tui  │        │        │@tender/config│
+   │   (Ink)     │        │        │  (XDG, env)  │
+   └──────┬──────┘        │        └──────────────┘
+          │               │               ▲
+          ▼               │               │
+   ┌──────────────┐       │               │
+   │@tender/agent │◄──────┘               │
+   │  (AI SDK)    │                       │
+   └──────┬───────┘                       │
+          │                               │
+          ▼                               │
+   ┌──────────────┐                       │
+   │@tender/domain│                       │
+   │  (business)  │                       │
+   └──────┬───────┘                       │
+          │                               │
+          ▼                               │
+   ┌──────────────┐                       │
+   │  @tender/db  │───────────────────────┘
+   │   (Kysely)   │
+   └──────────────┘
 ```
 
 ---
 
 ## Stack
 
-| Layer           | Technology                | Rationale                                                                        |
-| --------------- | ------------------------- | -------------------------------------------------------------------------------- |
-| Runtime         | Node.js                   | Ecosystem compatibility, libsql support                                          |
-| Package manager | pnpm                      | Fast, efficient, good monorepo support                                           |
-| Language        | TypeScript (strict)       | Type safety, IDE support                                                         |
-| Database        | libsql via @libsql/client | Local SQLite now, Turso cloud sync later                                         |
-| Query builder   | Kysely                    | Type-safe queries, no codegen, good libsql support                               |
-| TUI             | Ink                       | React component model for terminal UIs                                           |
-| State/data      | TanStack Query            | Async state management, caching, refetching                                      |
-| Date/time       | temporal-polyfill         | Modern API, ISO 8601 duration support (will remove when Temporal ships natively) |
-| Recurrence      | rrule                     | RFC 5545 RRULE parsing                                                           |
-| Testing         | Vitest                    | Fast, good ESM support, workspace mode for monorepo                              |
-| Linting         | oxlint                    | Fast, minimal config                                                             |
-| Formatting      | Prettier                  | Consistent code style                                                            |
-| Logging         | debug                     | Namespaced debug output, standard in Node ecosystem                              |
+| Layer           | Technology                | Rationale                                                                                                   |
+| --------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Runtime         | Node.js                   | Ecosystem compatibility, libsql support                                                                     |
+| Package manager | pnpm                      | Fast, efficient, good monorepo support                                                                      |
+| Language        | TypeScript (strict)       | Type safety, IDE support                                                                                    |
+| Database        | libsql via @libsql/client | Local SQLite now, Turso cloud sync later                                                                    |
+| Query builder   | Kysely                    | Type-safe queries, no codegen, good libsql support                                                          |
+| TUI             | Ink                       | React component model for terminal UIs                                                                      |
+| State/data      | TanStack Query            | Async state management, caching, refetching                                                                 |
+| Date/time       | temporal-polyfill         | Modern API, ISO 8601 duration support (will remove when Temporal ships natively)                            |
+| Recurrence      | rrule                     | RFC 5545 RRULE parsing                                                                                      |
+| Agent           | Vercel AI SDK             | Provider-agnostic, TypeScript-native, tool support (see [Agent Architecture](./0003-agent-architecture.md)) |
+| Testing         | Vitest                    | Fast, good ESM support, workspace mode for monorepo                                                         |
+| Linting         | oxlint                    | Fast, minimal config                                                                                        |
+| Formatting      | Prettier                  | Consistent code style                                                                                       |
+| Logging         | debug                     | Namespaced debug output, standard in Node ecosystem                                                         |
 
 ---
 
@@ -54,6 +67,7 @@ tender/
 │   ├── config/       # @tender/config
 │   ├── db/           # @tender/db
 │   ├── domain/       # @tender/domain
+│   ├── agent/        # @tender/agent
 │   ├── tui/          # @tender/tui
 │   └── cli/          # @tender/cli
 ├── docs/
@@ -117,6 +131,24 @@ export { recordSignal, getTaskDuration } from "./tasks";
 export type { Template, Task, Signal, Recurrence } from "@tender/db";
 ```
 
+#### @tender/agent
+
+Agentic LLM layer. Handles prioritization, emotional check-ins, and gentle inquiry.
+
+- Provider registry and model configuration
+- Tool definitions (Zod schemas + execute functions)
+- System prompt and agent personality
+- Conversation management
+
+See [Agent Architecture](./0003-agent-architecture.md) for detailed design.
+
+```typescript
+// Public API examples
+export { chat, streamChat } from "./tender";
+export { registry, defaultModel } from "./registry";
+export type { AgentConfig } from "./types";
+```
+
 #### @tender/tui
 
 Terminal UI. Ink components and screens.
@@ -156,9 +188,9 @@ import { createDatabase } from '@tender/db';
 ### Dependencies Flow
 
 ```
-cli ──┬── tui ── domain ── db
-      │                     │
-      └────── config ◄──────┘
+cli ──┬── tui ── agent ── domain ── db
+      │                              │
+      └────────── config ◄───────────┘
 ```
 
 - Packages may only depend on packages below/beside them
@@ -166,7 +198,8 @@ cli ──┬── tui ── domain ── db
 - `config` has no internal package dependencies (foundational)
 - `db` depends on `config` (for paths)
 - `domain` depends only on `db`
-- `tui` depends only on `domain` (no direct `db` imports)
+- `agent` depends only on `domain` (tools call domain functions)
+- `tui` depends on `agent` for conversational interactions (which transitively provides `domain`)
 - `cli` depends on all packages, wires them together
 
 ### Internal Structure
@@ -423,7 +456,7 @@ References:
 
 ### Package Compilation
 
-- **config, db, domain, tui**: Compiled with `tsc` only (no bundling)
+- **config, db, domain, agent, tui**: Compiled with `tsc` only (no bundling)
 - **cli**: Bundled with `tsup` into a single executable entry point
 
 ```
@@ -431,6 +464,7 @@ packages/
 ├── config/dist/     # tsc output, multiple .js files
 ├── db/dist/         # tsc output, multiple .js files
 ├── domain/dist/     # tsc output, multiple .js files
+├── agent/dist/      # tsc output, multiple .js files
 ├── tui/dist/        # tsc output, multiple .js files
 └── cli/dist/
     └── index.js     # tsup bundle, single file
@@ -475,6 +509,8 @@ tender:db          # Database operations
 tender:db:migrate  # Migration execution
 tender:domain      # Business logic
 tender:domain:*    # Subsystems (recurrence, signals, etc.)
+tender:agent       # Agent interactions
+tender:agent:tools # Tool execution
 tender:tui         # UI events
 tender:config      # Configuration loading
 ```
