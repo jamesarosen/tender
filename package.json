@@ -28,6 +28,7 @@
 		"vitest": "^4.0.16"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.17.0",
 		"ink": "^6.6.0",
 		"react": "^19.2.3"
 	}

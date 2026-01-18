@@ -6,34 +6,6 @@
 
 # Next
 
-## Agent Tools
-
-### 3. Read-Only SQL Tool
-
-Add tool for agent-driven prioritization:
-
-```typescript
-export const queryDatabase = tool({
-	description: 'Execute a read-only SQL query against the database',
-	inputSchema: z.object({
-		sql: z.string().describe('SELECT query to execute'),
-	}),
-	execute: async ({ sql }) => {
-		// Validate: must start with SELECT (after trimming/normalizing)
-		// Guardrails: 5s timeout, 1000 row limit
-		// On error: return fallback "all due tasks" result
-	},
-})
-```
-
-**Prompt additions needed:**
-
-- Full schema documentation in system prompt
-- Example queries for common patterns
-- Guidance on efficient query patterns
-
----
-
 # Later
 
 - Evals framework
