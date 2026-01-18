@@ -1,0 +1,16 @@
+{
+	"name": "@tender/db",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Database layer for Tender",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@libsql/client": "^0.17.0"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.16"
+	}
+}
