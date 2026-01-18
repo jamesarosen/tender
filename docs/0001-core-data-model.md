@@ -124,8 +124,8 @@ A discriminated union representing how a template recurs.
 
 ```typescript
 type Recurrence =
-  | { type: "interval"; duration: string } // ISO 8601 duration
-  | { type: "rrule"; rule: string }; // RFC 5545 RRULE
+	| { type: 'interval'; duration: string } // ISO 8601 duration
+	| { type: 'rrule'; rule: string } // RFC 5545 RRULE
 ```
 
 #### Interval (relative to last completion)
@@ -166,11 +166,11 @@ Examples:
 
 ```typescript
 type SignalKind =
-  | "deferred" // User postponed the task
-  | "feeling" // Emotional check-in
-  | "completed" // Task completion metadata
-  | "inquiry" // Response to "what's blocking you?"
-  | "surfaced"; // Task was shown to user
+	| 'deferred' // User postponed the task
+	| 'feeling' // Emotional check-in
+	| 'completed' // Task completion metadata
+	| 'inquiry' // Response to "what's blocking you?"
+	| 'surfaced' // Task was shown to user
 ```
 
 ### Signal Payloads
@@ -179,11 +179,11 @@ Each signal kind has a specific payload shape:
 
 ```typescript
 type SignalPayload =
-  | { kind: "deferred"; reason?: string }
-  | { kind: "feeling"; moment: "before" | "after"; value: string }
-  | { kind: "completed" /* no extra fields, duration in task */ }
-  | { kind: "inquiry"; question: string; response: string }
-  | { kind: "surfaced"; acted_on: boolean };
+	| { kind: 'deferred'; reason?: string }
+	| { kind: 'feeling'; moment: 'before' | 'after'; value: string }
+	| { kind: 'completed' /* no extra fields, duration in task */ }
+	| { kind: 'inquiry'; question: string; response: string }
+	| { kind: 'surfaced'; acted_on: boolean }
 ```
 
 Examples:
@@ -212,29 +212,29 @@ When a recurring task is completed, spawn the next instance:
 
 ```typescript
 async function spawnNextInstance(
-  template: Template,
-  lastCompleted: Date,
+	template: Template,
+	lastCompleted: Date
 ): Promise<Task> {
-  const nextDue = computeNextDue(template.recurrence, lastCompleted);
+	const nextDue = computeNextDue(template.recurrence, lastCompleted)
 
-  return db.insert("tasks", {
-    id: uuidv7(),
-    template_id: template.id,
-    description: template.description,
-    tags: template.tags,
-    prep_notes: template.prep_notes,
-    due_at: nextDue.toISOString(),
-    created_at: new Date().toISOString(),
-  });
+	return db.insert('tasks', {
+		id: uuidv7(),
+		template_id: template.id,
+		description: template.description,
+		tags: template.tags,
+		prep_notes: template.prep_notes,
+		due_at: nextDue.toISOString(),
+		created_at: new Date().toISOString(),
+	})
 }
 
 function computeNextDue(recurrence: Recurrence, lastCompleted: Date): Date {
-  switch (recurrence.type) {
-    case "interval":
-      return addDuration(lastCompleted, recurrence.duration);
-    case "rrule":
-      return nextOccurrence(recurrence.rule, new Date());
-  }
+	switch (recurrence.type) {
+		case 'interval':
+			return addDuration(lastCompleted, recurrence.duration)
+		case 'rrule':
+			return nextOccurrence(recurrence.rule, new Date())
+	}
 }
 ```
 
@@ -242,15 +242,15 @@ function computeNextDue(recurrence: Recurrence, lastCompleted: Date): Date {
 
 ```typescript
 function getTaskDuration(task: Task): number | null {
-  if (task.duration_override != null) {
-    return task.duration_override;
-  }
-  if (task.started_at && task.completed_at) {
-    const start = new Date(task.started_at);
-    const end = new Date(task.completed_at);
-    return Math.round((end.getTime() - start.getTime()) / 60000);
-  }
-  return null;
+	if (task.duration_override != null) {
+		return task.duration_override
+	}
+	if (task.started_at && task.completed_at) {
+		const start = new Date(task.started_at)
+		const end = new Date(task.completed_at)
+		return Math.round((end.getTime() - start.getTime()) / 60000)
+	}
+	return null
 }
 ```
 

@@ -76,9 +76,9 @@ Database layer. Owns schema, migrations, and data access.
 
 ```typescript
 // Public API examples
-export { createDatabase, runMigrations } from "./database";
-export { templates, tasks, signals } from "./repositories";
-export type { Database } from "./schema";
+export { createDatabase, runMigrations } from './database'
+export { templates, tasks, signals } from './repositories'
+export type { Database } from './schema'
 ```
 
 #### @tender/config
@@ -92,9 +92,9 @@ Configuration and environment management.
 
 ```typescript
 // Public API examples
-export { getConfig, getDataPath, getConfigPath } from "./paths";
-export { loadConfig, saveConfig } from "./config";
-export type { TenderConfig } from "./types";
+export { getConfig, getDataPath, getConfigPath } from './paths'
+export { loadConfig, saveConfig } from './config'
+export type { TenderConfig } from './types'
 ```
 
 #### @tender/domain
@@ -111,10 +111,10 @@ Types are re-exported from `@tender/db` for now. If domain needs diverge from st
 
 ```typescript
 // Public API examples
-export { spawnNextTask, computeNextDue } from "./recurrence";
-export { recordSignal, getTaskDuration } from "./tasks";
+export { spawnNextTask, computeNextDue } from './recurrence'
+export { recordSignal, getTaskDuration } from './tasks'
 // Re-exported from @tender/db
-export type { Template, Task, Signal, Recurrence } from "@tender/db";
+export type { Template, Task, Signal, Recurrence } from '@tender/db'
 ```
 
 #### @tender/agent
@@ -130,9 +130,9 @@ See [Agent Architecture](./0003-agent-architecture.md) for detailed design.
 
 ```typescript
 // Public API examples
-export { chat, streamChat } from "./tender";
-export { registry, defaultModel } from "./registry";
-export type { AgentConfig } from "./types";
+export { chat, streamChat } from './tender'
+export { registry, defaultModel } from './registry'
+export type { AgentConfig } from './types'
 ```
 
 #### @tender/tui
@@ -146,8 +146,8 @@ Terminal UI. Ink components and screens.
 
 ```typescript
 // Public API examples
-export { App } from "./App";
-export { FocusView, DayView, CaptureView } from "./screens";
+export { App } from './App'
+export { FocusView, DayView, CaptureView } from './screens'
 ```
 
 #### @tender/cli
@@ -232,18 +232,18 @@ migrations/
 Each migration exports `up` and `down` functions:
 
 ```typescript
-import { Kysely } from "kysely";
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .createTable("templates")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    // ...
-    .execute();
+	await db.schema
+		.createTable('templates')
+		.addColumn('id', 'text', (col) => col.primaryKey())
+		// ...
+		.execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable("templates").execute();
+	await db.schema.dropTable('templates').execute()
 }
 ```
 
@@ -274,11 +274,11 @@ Managed by `@tender/config`, following the [XDG Base Directory Specification](ht
 
 ```typescript
 // Usage from other packages
-import { getDataPath, getConfigPath, getStatePath } from "@tender/config";
+import { getDataPath, getConfigPath, getStatePath } from '@tender/config'
 
-const dbPath = getDataPath("tender.db");
-const configPath = getConfigPath("config.json");
-const logPath = getStatePath("debug.log");
+const dbPath = getDataPath('tender.db')
+const configPath = getConfigPath('config.json')
+const logPath = getStatePath('debug.log')
 ```
 
 ---
@@ -289,19 +289,19 @@ Full strict mode with additional safety:
 
 ```json
 {
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
-    "moduleResolution": "bundler",
-    "module": "ESNext",
-    "target": "ES2022"
-  }
+	"compilerOptions": {
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"exactOptionalPropertyTypes": true,
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
+		"verbatimModuleSyntax": true,
+		"moduleResolution": "bundler",
+		"module": "ESNext",
+		"target": "ES2022"
+	}
 }
 ```
 
@@ -351,21 +351,21 @@ Errors are thrown (not returned as Result types), with custom error classes for 
 ```typescript
 // In @tender/domain
 export class TaskNotFoundError extends Error {
-  constructor(public readonly taskId: string) {
-    super(`Task not found: ${taskId}`);
-    this.name = "TaskNotFoundError";
-  }
+	constructor(public readonly taskId: string) {
+		super(`Task not found: ${taskId}`)
+		this.name = 'TaskNotFoundError'
+	}
 }
 
 export class InvalidRecurrenceError extends Error {
-  constructor(
-    public readonly recurrence: string,
-    cause?: Error,
-  ) {
-    super(`Invalid recurrence: ${recurrence}`);
-    this.name = "InvalidRecurrenceError";
-    this.cause = cause;
-  }
+	constructor(
+		public readonly recurrence: string,
+		cause?: Error
+	) {
+		super(`Invalid recurrence: ${recurrence}`)
+		this.name = 'InvalidRecurrenceError'
+		this.cause = cause
+	}
 }
 ```
 
@@ -402,13 +402,13 @@ TUI state uses React Context for app-wide state, with TanStack Query for async d
 
 ```typescript
 // App-wide context for UI state (current screen, selections)
-const AppContext = createContext<AppState>(/* ... */);
+const AppContext = createContext<AppState>(/* ... */)
 
 // TanStack Query for data fetching
 const { data: tasks } = useQuery({
-  queryKey: ["tasks", "due"],
-  queryFn: () => domain.getDueTasks(),
-});
+	queryKey: ['tasks', 'due'],
+	queryFn: () => domain.getDueTasks(),
+})
 ```
 
 ### Data Flow
@@ -479,13 +479,13 @@ For now, installed via pnpm from the repo. Future options:
 Uses the [`debug`](https://www.npmjs.com/package/debug) package with namespaced loggers:
 
 ```typescript
-import createDebug from "debug";
+import createDebug from 'debug'
 
-const debug = createDebug("tender:domain:recurrence");
+const debug = createDebug('tender:domain:recurrence')
 
 export function computeNextDue(recurrence: Recurrence, lastCompleted: Date) {
-  debug("computing next due", { recurrence, lastCompleted });
-  // ...
+	debug('computing next due', { recurrence, lastCompleted })
+	// ...
 }
 ```
 
@@ -525,10 +525,10 @@ Configured via `@tender/config`:
 ```typescript
 // In @tender/config
 export interface TenderConfig {
-  debug?: {
-    output?: "stderr" | "file";
-    filePath?: string; // defaults to XDG_STATE_HOME/tender/debug.log
-  };
+	debug?: {
+		output?: 'stderr' | 'file'
+		filePath?: string // defaults to XDG_STATE_HOME/tender/debug.log
+	}
 }
 ```
 
@@ -541,17 +541,17 @@ export interface TenderConfig {
 All date/time operations use `temporal-polyfill`:
 
 ```typescript
-import { Temporal } from "temporal-polyfill";
+import { Temporal } from 'temporal-polyfill'
 
 // Parse ISO 8601 duration
-const duration = Temporal.Duration.from("P4W");
+const duration = Temporal.Duration.from('P4W')
 
 // Add duration to a date
-const lastCompleted = Temporal.PlainDate.from("2025-01-01");
-const nextDue = lastCompleted.add(duration);
+const lastCompleted = Temporal.PlainDate.from('2025-01-01')
+const nextDue = lastCompleted.add(duration)
 
 // Current time in UTC
-const now = Temporal.Now.instant();
+const now = Temporal.Now.instant()
 ```
 
 ### RRULE (via rrule package)
@@ -559,13 +559,13 @@ const now = Temporal.Now.instant();
 Calendar-anchored recurrence uses RFC 5545:
 
 ```typescript
-import { RRule } from "rrule";
+import { RRule } from 'rrule'
 
 // Parse RRULE string
-const rule = RRule.fromString("FREQ=WEEKLY;BYDAY=SU");
+const rule = RRule.fromString('FREQ=WEEKLY;BYDAY=SU')
 
 // Get next occurrence
-const next = rule.after(new Date());
+const next = rule.after(new Date())
 ```
 
 ### Storage
@@ -582,16 +582,16 @@ The `@libsql/client` choice enables future Turso integration for multi-device sy
 
 ```typescript
 // Local-only (current)
-import { createClient } from "@libsql/client";
-const db = createClient({ url: "file:./tender.db" });
+import { createClient } from '@libsql/client'
+const db = createClient({ url: 'file:./tender.db' })
 
 // With Turso sync (future)
 const db = createClient({
-  url: "file:./tender.db",
-  syncUrl: process.env.TURSO_DATABASE_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-  syncInterval: 60, // seconds
-});
+	url: 'file:./tender.db',
+	syncUrl: process.env.TURSO_DATABASE_URL,
+	authToken: process.env.TURSO_AUTH_TOKEN,
+	syncInterval: 60, // seconds
+})
 ```
 
 When multi-device is added:
@@ -719,8 +719,8 @@ The `pnpm tender` command is defined in the root `package.json`:
 
 ```json
 {
-  "scripts": {
-    "tender": "node packages/cli/dist/index.js"
-  }
+	"scripts": {
+		"tender": "node packages/cli/dist/index.js"
+	}
 }
 ```

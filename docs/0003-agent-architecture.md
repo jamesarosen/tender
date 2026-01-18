@@ -48,33 +48,33 @@ If we split, likely candidates:
 The architecture supports pluggable LLM providers via Vercel AI SDK's provider registry:
 
 ```typescript
-import { createProviderRegistry } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { createProviderRegistry } from 'ai'
+import { anthropic } from '@ai-sdk/anthropic'
 
 // Current: hard-coded Claude
 export const registry = createProviderRegistry({
-  anthropic,
-});
+	anthropic,
+})
 
 export const defaultModel = registry.languageModel(
-  "anthropic:claude-sonnet-4-20250514",
-);
+	'anthropic:claude-sonnet-4-20250514'
+)
 ```
 
 Future: user-provided keys and local inference:
 
 ```typescript
-import { createProviderRegistry } from "ai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createOllama } from "ollama-ai-provider";
+import { createProviderRegistry } from 'ai'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createOpenAI } from '@ai-sdk/openai'
+import { createOllama } from 'ollama-ai-provider'
 
 export function createRegistry(config: AgentConfig) {
-  return createProviderRegistry({
-    anthropic: createAnthropic({ apiKey: config.anthropicKey }),
-    openai: createOpenAI({ apiKey: config.openaiKey }),
-    ollama: createOllama({ baseURL: config.ollamaBaseUrl }),
-  });
+	return createProviderRegistry({
+		anthropic: createAnthropic({ apiKey: config.anthropicKey }),
+		openai: createOpenAI({ apiKey: config.openaiKey }),
+		ollama: createOllama({ baseURL: config.ollamaBaseUrl }),
+	})
 }
 ```
 
@@ -89,31 +89,31 @@ This enables:
 Tools use Zod schemas for type-safe input validation:
 
 ```typescript
-import { tool } from "ai";
-import { z } from "zod";
+import { tool } from 'ai'
+import { z } from 'zod'
 
 export const getSuggestedTasks = tool({
-  description: "Get prioritized task suggestions for the user to focus on",
-  inputSchema: z.object({
-    limit: z.number().optional().describe("Maximum number of tasks to return"),
-    excludeIds: z.array(z.string()).optional().describe("Task IDs to exclude"),
-  }),
-  execute: async ({ limit = 3, excludeIds = [] }) => {
-    // Implementation calls domain layer
-  },
-});
+	description: 'Get prioritized task suggestions for the user to focus on',
+	inputSchema: z.object({
+		limit: z.number().optional().describe('Maximum number of tasks to return'),
+		excludeIds: z.array(z.string()).optional().describe('Task IDs to exclude'),
+	}),
+	execute: async ({ limit = 3, excludeIds = [] }) => {
+		// Implementation calls domain layer
+	},
+})
 
 export const recordSignal = tool({
-  description: "Record an emotional or behavioral signal about a task",
-  inputSchema: z.object({
-    taskId: z.string().describe("The task this signal relates to"),
-    kind: z.enum(["deferred", "feeling", "completed", "inquiry", "surfaced"]),
-    payload: z.record(z.unknown()).optional(),
-  }),
-  execute: async ({ taskId, kind, payload }) => {
-    // Implementation calls domain layer
-  },
-});
+	description: 'Record an emotional or behavioral signal about a task',
+	inputSchema: z.object({
+		taskId: z.string().describe('The task this signal relates to'),
+		kind: z.enum(['deferred', 'feeling', 'completed', 'inquiry', 'surfaced']),
+		payload: z.record(z.unknown()).optional(),
+	}),
+	execute: async ({ taskId, kind, payload }) => {
+		// Implementation calls domain layer
+	},
+})
 ```
 
 ---
@@ -187,27 +187,27 @@ Personality:
 - Use tools to access task data; don't make assumptions
 
 You have access to tools for reading tasks, recording signals, and understanding patterns.
-`;
+`
 ```
 
 ### Agent Configuration
 
 ```typescript
-import { generateText, tool } from "ai";
-import { systemPrompt } from "./prompts/system";
-import { tools } from "./tools";
-import { defaultModel } from "./registry";
+import { generateText, tool } from 'ai'
+import { systemPrompt } from './prompts/system'
+import { tools } from './tools'
+import { defaultModel } from './registry'
 
 export async function chat(messages: Message[]) {
-  const result = await generateText({
-    model: defaultModel,
-    system: systemPrompt,
-    messages,
-    tools,
-    maxSteps: 5, // Allow multi-step tool use
-  });
+	const result = await generateText({
+		model: defaultModel,
+		system: systemPrompt,
+		messages,
+		tools,
+		maxSteps: 5, // Allow multi-step tool use
+	})
 
-  return result;
+	return result
 }
 ```
 
@@ -250,21 +250,21 @@ The TUI constructs messages that give the agent context:
 ```typescript
 // In @tender/tui
 async function handleSkipTask(task: Task) {
-  const response = await agent.chat([
-    ...conversationHistory,
-    {
-      role: "user",
-      content: `Skip task: "${task.description}" (id: ${task.id})`,
-    },
-  ]);
+	const response = await agent.chat([
+		...conversationHistory,
+		{
+			role: 'user',
+			content: `Skip task: "${task.description}" (id: ${task.id})`,
+		},
+	])
 
-  // Display agent's response
-  setAgentMessage(response.text);
+	// Display agent's response
+	setAgentMessage(response.text)
 
-  // If agent asked a question, show input
-  if (response.text.includes("?")) {
-    setShowInput(true);
-  }
+	// If agent asked a question, show input
+	if (response.text.includes('?')) {
+		setShowInput(true)
+	}
 }
 ```
 
@@ -310,18 +310,18 @@ flowchart TB
 For longer responses, we'll want streaming:
 
 ```typescript
-import { streamText } from "ai";
+import { streamText } from 'ai'
 
 export async function streamChat(messages: Message[]) {
-  const result = await streamText({
-    model: defaultModel,
-    system: systemPrompt,
-    messages,
-    tools,
-    maxSteps: 5,
-  });
+	const result = await streamText({
+		model: defaultModel,
+		system: systemPrompt,
+		messages,
+		tools,
+		maxSteps: 5,
+	})
 
-  return result.toTextStreamResponse();
+	return result.toTextStreamResponse()
 }
 ```
 
@@ -340,23 +340,23 @@ Start with in-memory, add persistence when continuity matters.
 For certain responses (task suggestions, pattern reports), we may want structured output:
 
 ```typescript
-import { generateObject } from "ai";
-import { z } from "zod";
+import { generateObject } from 'ai'
+import { z } from 'zod'
 
 const suggestionSchema = z.object({
-  task: z.object({
-    id: z.string(),
-    description: z.string(),
-  }),
-  reason: z.string(),
-  emotionalNote: z.string().optional(),
-});
+	task: z.object({
+		id: z.string(),
+		description: z.string(),
+	}),
+	reason: z.string(),
+	emotionalNote: z.string().optional(),
+})
 
 const result = await generateObject({
-  model: defaultModel,
-  schema: suggestionSchema,
-  prompt: "Suggest the next task for the user",
-});
+	model: defaultModel,
+	schema: suggestionSchema,
+	prompt: 'Suggest the next task for the user',
+})
 ```
 
 ### Graceful Degradation
