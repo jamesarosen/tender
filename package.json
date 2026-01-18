@@ -1,0 +1,28 @@
+{
+  "name": "@tender/workspace",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.22.0",
+  "private": true,
+  "description": "Tender - Workspace",
+  "author": "James A Rosen, Tender",
+  "scripts": {
+    "format": "pnpm run format:write",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "lint": "oxlint",
+    "lint:ci": "oxlint --format github",
+    "lint:fix": "oxlint --fix",
+    "test:ci": "vitest run --reporter=default --reporter=github-actions",
+    "test": "pnpm run test:watch",
+    "test:run": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "oxlint": "^1.36.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
+  }
+}

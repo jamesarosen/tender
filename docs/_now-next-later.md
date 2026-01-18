@@ -1,6 +1,6 @@
 # Now
 
-- [ ] Code quality: add oxlint, prettier, vitest. Run in CI. Run in Claude Stop hook.
+(nothing)
 
 ---
 
