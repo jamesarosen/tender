@@ -6,26 +6,6 @@
 
 # Next
 
-Pre-implementation spikes and schema updates identified during risk review.
-
-## Spike on Ink + Streaming LLM Responses
-
-**Risk:** Ink's React-based render model may not handle streaming text updates smoothly.
-
-**Spike goal:** Validate that we can render streaming LLM output in Ink without flicker, excessive re-renders, or layout thrashing.
-
-**Approach:**
-
-1. Create minimal Ink app with a `<Text>` component
-2. Simulate streaming by appending characters every 50ms
-3. Test with multi-line responses and word wrapping
-4. If problematic, explore:
-   - Buffering (render every N characters)
-   - ink-use-stdout-dimensions for responsive layouts
-   - Custom streaming component
-
-**Success criteria:** Smooth rendering of 500+ character streaming response.
-
 ## Agent Tools
 
 ### 3. Read-Only SQL Tool
@@ -75,3 +55,4 @@ Captured during risk review session:
 | SQL guardrails  | Moderate               | Timeout (5s), row limit (1000), block dangerous functions |
 | LLM unavailable | Queue interactions     | User can keep working, replay when available              |
 | Blocker model   | Both FK + freeform     | Flexibility for linked tasks and notes                    |
+| Ink streaming   | Use with layout care   | Works flicker-free; explicit widths improve smoothness    |
