@@ -20,9 +20,15 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/react": "^19.2.8",
     "oxlint": "^1.36.0",
     "prettier": "^3.3.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3",
     "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "ink": "^6.6.0",
+    "react": "^19.2.3"
   }
 }

@@ -6,26 +6,6 @@
 
 # Next
 
-Pre-implementation spikes and schema updates identified during risk review.
-
-## Spike on Ink + Streaming LLM Responses
-
-**Risk:** Ink's React-based render model may not handle streaming text updates smoothly.
-
-**Spike goal:** Validate that we can render streaming LLM output in Ink without flicker, excessive re-renders, or layout thrashing.
-
-**Approach:**
-
-1. Create minimal Ink app with a `<Text>` component
-2. Simulate streaming by appending characters every 50ms
-3. Test with multi-line responses and word wrapping
-4. If problematic, explore:
-   - Buffering (render every N characters)
-   - ink-use-stdout-dimensions for responsive layouts
-   - Custom streaming component
-
-**Success criteria:** Smooth rendering of 500+ character streaming response.
-
 ## Agent Tools
 
 ### 3. Read-Only SQL Tool
@@ -75,3 +55,28 @@ Captured during risk review session:
 | SQL guardrails  | Moderate               | Timeout (5s), row limit (1000), block dangerous functions |
 | LLM unavailable | Queue interactions     | User can keep working, replay when available              |
 | Blocker model   | Both FK + freeform     | Flexibility for linked tasks and notes                    |
+| Ink streaming   | Use with layout care   | Works flicker-free; explicit widths improve smoothness    |
+
+---
+
+# Completed Spikes
+
+## Ink + Streaming LLM Responses (2026-01-18)
+
+**Result:** Validated. Streaming works smoothly.
+
+**Findings:**
+
+- 718 characters streamed flicker-free at both 50ms and 16ms intervals
+- 50ms interval: very smooth, but slow (42s total)
+- 16ms interval: slightly less smooth, still flicker-free, much faster
+- Layout stability matters: adding `width="100%"` to container Box improved smoothness
+
+**Recommendations:**
+
+1. Use explicit widths on streaming containers (`width="100%"` or fixed)
+2. 16-30ms intervals likely optimal for perceived speed vs smoothness
+3. No buffering needed - Ink handles rapid updates well
+4. Consider `useStdout` for responsive terminal width
+
+**Artifacts:** `spikes/ink-streaming.tsx`
