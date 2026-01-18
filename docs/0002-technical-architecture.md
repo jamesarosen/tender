@@ -4,36 +4,22 @@
 
 Tender is a TypeScript monorepo with a local-first SQLite database and terminal UI. The architecture prioritizes clear module boundaries, type safety, and a path to future cloud sync.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      @tender/cli                        │
-│                   (entry point, wiring)                 │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-          ┌───────────────┼───────────────┐
-          ▼               │               ▼
-   ┌─────────────┐        │        ┌──────────────┐
-   │@tender/tui  │        │        │@tender/config│
-   │   (Ink)     │        │        │  (XDG, env)  │
-   └──────┬──────┘        │        └──────────────┘
-          │               │               ▲
-          ▼               │               │
-   ┌──────────────┐       │               │
-   │@tender/agent │◄──────┘               │
-   │  (AI SDK)    │                       │
-   └──────┬───────┘                       │
-          │                               │
-          ▼                               │
-   ┌──────────────┐                       │
-   │@tender/domain│                       │
-   │  (business)  │                       │
-   └──────┬───────┘                       │
-          │                               │
-          ▼                               │
-   ┌──────────────┐                       │
-   │  @tender/db  │───────────────────────┘
-   │   (Kysely)   │
-   └──────────────┘
+```mermaid
+flowchart TB
+    cli["@tender/cli<br/>(entry point, wiring)"]
+    tui["@tender/tui<br/>(Ink)"]
+    config["@tender/config<br/>(XDG, env)"]
+    agent["@tender/agent<br/>(AI SDK)"]
+    domain["@tender/domain<br/>(business)"]
+    db["@tender/db<br/>(Kysely)"]
+
+    cli --> tui
+    cli --> config
+    cli --> agent
+    tui --> agent
+    agent --> domain
+    domain --> db
+    db --> config
 ```
 
 ---
@@ -187,10 +173,11 @@ import { createDatabase } from '@tender/db';
 
 ### Dependencies Flow
 
-```
-cli ──┬── tui ── agent ── domain ── db
-      │                              │
-      └────────── config ◄───────────┘
+```mermaid
+flowchart LR
+    cli --> tui --> agent --> domain --> db
+    cli --> config
+    db --> config
 ```
 
 - Packages may only depend on packages below/beside them
@@ -652,23 +639,33 @@ Incrementally rewrite for better portability and performance:
    - UniFFI for iOS/Android native
    - WASM for web
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    UI Layer                         │
-├──────────┬──────────┬───────────┬──────────────────┤
-│ Ink/Node │ Swift UI │ Kotlin    │ React/WASM       │
-│  (TUI)   │  (iOS)   │ (Android) │ (Web)            │
-└────┬─────┴────┬─────┴─────┬─────┴────────┬─────────┘
-     │          │           │              │
-     ▼          ▼           ▼              ▼
-   NAPI-RS    UniFFI      UniFFI         WASM
-     │          │           │              │
-     └──────────┴─────┬─────┴──────────────┘
-                      ▼
-            ┌─────────────────┐
-            │   Rust Core     │
-            │ (domain + db)   │
-            └─────────────────┘
+```mermaid
+flowchart TB
+    subgraph ui["UI Layer"]
+        ink["Ink/Node<br/>(TUI)"]
+        swift["Swift UI<br/>(iOS)"]
+        kotlin["Kotlin<br/>(Android)"]
+        react["React/WASM<br/>(Web)"]
+    end
+
+    subgraph bindings["FFI Bindings"]
+        napi["NAPI-RS"]
+        uniffii["UniFFI"]
+        uniffia["UniFFI"]
+        wasm["WASM"]
+    end
+
+    rust["Rust Core<br/>(domain + db)"]
+
+    ink --> napi
+    swift --> uniffii
+    kotlin --> uniffia
+    react --> wasm
+
+    napi --> rust
+    uniffii --> rust
+    uniffia --> rust
+    wasm --> rust
 ```
 
 #### Why Hybrid?

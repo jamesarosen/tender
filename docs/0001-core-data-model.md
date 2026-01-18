@@ -8,16 +8,10 @@ Tender's data model centers on three entities:
 - **Task** — A single actionable item (one-off or spawned from a template)
 - **Signal** — Emotional and behavioral data attached to tasks
 
-```
-┌─────────────┐         ┌─────────────┐
-│  Template   │────────►│    Task     │
-│ (recurring) │ spawns  │ (instance)  │
-└─────────────┘         └──────┬──────┘
-                               │
-                               ▼
-                        ┌─────────────┐
-                        │   Signal    │
-                        └─────────────┘
+```mermaid
+flowchart LR
+    Template["Template<br/>(recurring)"] -->|spawns| Task["Task<br/>(instance)"]
+    Task --> Signal
 ```
 
 ## Design Decisions

@@ -4,17 +4,15 @@
 
 Tender includes an agentic LLM component that powers task prioritization, emotional check-ins, and gentle inquiry. The agent is called **Tender** — it _is_ the warm, supportive presence that helps users navigate their tasks.
 
-```
-┌─────────────────────────────────────────────┐
-│               Tender Agent                   │
-│  (LLM with instructions + tools)            │
-├─────────────────────────────────────────────┤
-│ Tools:                                       │
-│  • getSuggestedTasks() → Task[]             │
-│  • recordSignal(taskId, signal)             │
-│  • getTaskHistory(taskId) → Signal[]        │
-│  • getTemplatePatterns(templateId)          │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph agent["Tender Agent<br/>(LLM with instructions + tools)"]
+        direction LR
+        t1["getSuggestedTasks() → Task[]"]
+        t2["recordSignal(taskId, signal)"]
+        t3["getTaskHistory(taskId) → Signal[]"]
+        t4["getTemplatePatterns(templateId)"]
+    end
 ```
 
 ---
@@ -152,10 +150,10 @@ packages/agent/
 
 ### Dependencies
 
-```
-tui ── agent ── domain ── db
-                  │
-                  └── config
+```mermaid
+flowchart LR
+    tui --> agent --> domain --> db
+    domain --> config
 ```
 
 - `@tender/tui` depends on `@tender/agent` for conversational interactions
@@ -219,47 +217,23 @@ export async function chat(messages: Message[]) {
 
 The TUI is the primary consumer of the agent. When users interact with tasks, the TUI translates their actions into agent conversations:
 
-```
-┌─────────┐    ┌─────────────┐    ┌──────────────┐    ┌──────────────┐
-│   TUI   │    │    Agent    │    │    Domain    │    │      DB      │
-└────┬────┘    └──────┬──────┘    └──────┬───────┘    └──────┬───────┘
-     │                │                   │                   │
-     │  User presses "skip" on task      │                   │
-     │                │                   │                   │
-     │  chat([                           │                   │
-     │    { role: "user",                │                   │
-     │      content: "Skip 'email        │                   │
-     │      grandma'" }                  │                   │
-     │  ])             │                   │                   │
-     │────────────────►│                   │                   │
-     │                │                   │                   │
-     │                │  recordSignal()   │                   │
-     │                │  (deferred)       │                   │
-     │                │──────────────────►│                   │
-     │                │                   │  INSERT signal    │
-     │                │                   │──────────────────►│
-     │                │                   │                   │
-     │  "No problem.  │                   │                   │
-     │◄───────────────│                   │                   │
-     │   I'm curious — what's making     │                   │
-     │   this one hard to start?"        │                   │
-     │                │                   │                   │
-     │  Display response, show input     │                   │
-     │                │                   │                   │
-     │  User types: "I don't have        │                   │
-     │  grandma's new email"             │                   │
-     │────────────────►│                   │                   │
-     │                │                   │                   │
-     │                │  recordSignal()   │                   │
-     │                │  (inquiry)        │                   │
-     │                │──────────────────►│                   │
-     │                │                   │──────────────────►│
-     │                │                   │                   │
-     │  "Ah, a blocker! Would it help    │                   │
-     │◄───────────────│                   │                   │
-     │   to add 'get grandma's email'    │                   │
-     │   as a separate task?"            │                   │
-     │                │                   │                   │
+```mermaid
+sequenceDiagram
+    participant TUI
+    participant Agent
+    participant Domain
+    participant DB
+
+    Note over TUI: User presses "skip" on task
+    TUI->>Agent: chat([{ role: "user",<br/>content: "Skip 'email grandma'" }])
+    Agent->>Domain: recordSignal() (deferred)
+    Domain->>DB: INSERT signal
+    Agent-->>TUI: "No problem. I'm curious —<br/>what's making this one hard to start?"
+    Note over TUI: Display response, show input
+    TUI->>Agent: "I don't have grandma's new email"
+    Agent->>Domain: recordSignal() (inquiry)
+    Domain->>DB: INSERT signal
+    Agent-->>TUI: "Ah, a blocker! Would it help to add<br/>'get grandma's email' as a separate task?"
 ```
 
 ### Key Points
@@ -300,62 +274,31 @@ async function handleSkipTask(task: Task) {
 
 ### Task Suggestion Flow
 
-```
-User: "What should I work on?"
-    │
-    ▼
-Tender calls getSuggestedTasks()
-    │
-    ▼
-Tool returns prioritized tasks with context
-    │
-    ▼
-Tender responds: "I'd suggest starting with [task].
-                  It's been on your list for a while —
-                  is there something making it hard to start?"
+```mermaid
+flowchart TB
+    A["User: 'What should I work on?'"] --> B["Tender calls getSuggestedTasks()"]
+    B --> C["Tool returns prioritized tasks with context"]
+    C --> D["Tender responds: 'I'd suggest starting with [task].<br/>It's been on your list for a while —<br/>is there something making it hard to start?'"]
 ```
 
 ### Emotional Check-in Flow
 
-```
-User completes a task
-    │
-    ▼
-TUI prompts: "How did that feel?"
-    │
-    ▼
-User: "Relieved, actually"
-    │
-    ▼
-Tender calls recordSignal(taskId, { kind: "feeling", ... })
-    │
-    ▼
-Tender responds: "Good to hear. That one had been
-                  lingering — any insight on what
-                  finally got you to do it?"
+```mermaid
+flowchart TB
+    A["User completes a task"] --> B["TUI prompts: 'How did that feel?'"]
+    B --> C["User: 'Relieved, actually'"]
+    C --> D["Tender calls recordSignal(taskId, { kind: 'feeling', ... })"]
+    D --> E["Tender responds: 'Good to hear. That one had been<br/>lingering — any insight on what<br/>finally got you to do it?'"]
 ```
 
 ### Gentle Inquiry Flow
 
-```
-Task has been deferred 3+ times
-    │
-    ▼
-Tender (proactively): "I notice [task] keeps getting pushed.
-                       No judgment — but I'm curious:
-                       is it too big? Unpleasant?
-                       Or maybe just not the right time?"
-    │
-    ▼
-User: "I don't have Sarah's address"
-    │
-    ▼
-Tender calls recordSignal(taskId, { kind: "inquiry", ... })
-    │
-    ▼
-Tender responds: "Ah, a blocker! Would it help to
-                  add 'get Sarah's address' as a
-                  separate task?"
+```mermaid
+flowchart TB
+    A["Task has been deferred 3+ times"] --> B["Tender (proactively): 'I notice [task] keeps getting pushed.<br/>No judgment — but I'm curious:<br/>is it too big? Unpleasant?<br/>Or maybe just not the right time?'"]
+    B --> C["User: 'I don't have Sarah's address'"]
+    C --> D["Tender calls recordSignal(taskId, { kind: 'inquiry', ... })"]
+    D --> E["Tender responds: 'Ah, a blocker! Would it help to<br/>add \"get Sarah's address\" as a<br/>separate task?'"]
 ```
 
 ---
