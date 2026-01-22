@@ -4,7 +4,6 @@
   and record reflections, but agent can't dig in on them.
 - Add CHECK constraints with `json_valid()` to JSON columns (tags, recurrence,
   payload)
-- Minimal RRULE/timezone test suite (enhance as we find problems)
 
 ---
 
