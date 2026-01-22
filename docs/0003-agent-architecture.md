@@ -107,7 +107,7 @@ export const recordSignal = tool({
 	description: 'Record an emotional or behavioral signal about a task',
 	inputSchema: z.object({
 		taskId: z.string().describe('The task this signal relates to'),
-		kind: z.enum(['deferred', 'feeling', 'completed', 'inquiry', 'surfaced']),
+		kind: z.enum(['deferred', 'completed', 'surfaced', 'reflection']),
 		payload: z.record(z.unknown()).optional(),
 	}),
 	execute: async ({ taskId, kind, payload }) => {
@@ -231,7 +231,7 @@ sequenceDiagram
     Agent-->>TUI: "No problem. I'm curious —<br/>what's making this one hard to start?"
     Note over TUI: Display response, show input
     TUI->>Agent: "I don't have grandma's new email"
-    Agent->>Domain: recordSignal() (inquiry)
+    Agent->>Domain: recordSignal() (reflection)
     Domain->>DB: INSERT signal
     Agent-->>TUI: "Ah, a blocker! Would it help to add<br/>'get grandma's email' as a separate task?"
 ```
@@ -287,7 +287,7 @@ flowchart TB
 flowchart TB
     A["User completes a task"] --> B["TUI prompts: 'How did that feel?'"]
     B --> C["User: 'Relieved, actually'"]
-    C --> D["Tender calls recordSignal(taskId, { kind: 'feeling', ... })"]
+    C --> D["Tender calls recordSignal(taskId, { kind: 'reflection', ... })"]
     D --> E["Tender responds: 'Good to hear. That one had been<br/>lingering — any insight on what<br/>finally got you to do it?'"]
 ```
 
@@ -297,7 +297,7 @@ flowchart TB
 flowchart TB
     A["Task has been deferred 3+ times"] --> B["Tender (proactively): 'I notice [task] keeps getting pushed.<br/>No judgment — but I'm curious:<br/>is it too big? Unpleasant?<br/>Or maybe just not the right time?'"]
     B --> C["User: 'I don't have Sarah's address'"]
-    C --> D["Tender calls recordSignal(taskId, { kind: 'inquiry', ... })"]
+    C --> D["Tender calls recordSignal(taskId, { kind: 'reflection', ... })"]
     D --> E["Tender responds: 'Ah, a blocker! Would it help to<br/>add \"get Sarah's address\" as a<br/>separate task?'"]
 ```
 

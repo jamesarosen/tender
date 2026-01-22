@@ -46,8 +46,8 @@ Defines recurring task patterns.
 CREATE TABLE templates (
   id TEXT PRIMARY KEY,  -- UUIDv7
   description TEXT NOT NULL,
-  recurrence TEXT,  -- JSON: Recurrence | null
-  prep_notes TEXT,
+  recurrence TEXT NOT NULL,  -- JSON: Recurrence
+  preparation_notes TEXT,
   tags TEXT DEFAULT '[]',  -- JSON array
   created_at TEXT NOT NULL,  -- ISO 8601 UTC
   archived_at TEXT  -- ISO 8601 UTC, null if active
@@ -66,7 +66,7 @@ CREATE TABLE tasks (
   template_id TEXT REFERENCES templates(id),  -- null for one-off tasks
   description TEXT NOT NULL,
   tags TEXT DEFAULT '[]',  -- JSON array
-  prep_notes TEXT,
+  preparation_notes TEXT,
   due_at TEXT,  -- ISO 8601 UTC
   created_at TEXT NOT NULL,  -- ISO 8601 UTC
   started_at TEXT,  -- ISO 8601 UTC, for passive time tracking
@@ -167,10 +167,9 @@ Examples:
 ```typescript
 type SignalKind =
 	| 'deferred' // User postponed the task
-	| 'feeling' // Emotional check-in
 	| 'completed' // Task completion metadata
-	| 'inquiry' // Response to "what's blocking you?"
 	| 'surfaced' // Task was shown to user
+	| 'reflection' // User reflection (feelings, inquiries, etc.)
 ```
 
 ### Signal Payloads
@@ -180,10 +179,14 @@ Each signal kind has a specific payload shape:
 ```typescript
 type SignalPayload =
 	| { kind: 'deferred'; reason?: string }
-	| { kind: 'feeling'; moment: 'before' | 'after'; value: string }
 	| { kind: 'completed' /* no extra fields, duration in task */ }
-	| { kind: 'inquiry'; question: string; response: string }
 	| { kind: 'surfaced'; acted_on: boolean }
+	| {
+			kind: 'reflection'
+			text: string
+			moment?: 'before' | 'after'
+			prompt?: string
+	  }
 ```
 
 Examples:
@@ -192,14 +195,14 @@ Examples:
 // Deferred with reason
 { "kind": "deferred", "reason": "too big" }
 
-// Feeling before starting
-{ "kind": "feeling", "moment": "before", "value": "anxious" }
-
 // Task was surfaced but user didn't act on it
 { "kind": "surfaced", "acted_on": false }
 
-// User responded to inquiry about lingering task
-{ "kind": "inquiry", "question": "What's making this hard?", "response": "I don't have Sarah's address" }
+// Reflection before starting a task
+{ "text": "anxious", "moment": "before" }
+
+// Reflection in response to a prompt about a lingering task
+{ "text": "I don't have Sarah's address", "prompt": "What's making this hard?" }
 ```
 
 ---
@@ -222,7 +225,7 @@ async function spawnNextInstance(
 		template_id: template.id,
 		description: template.description,
 		tags: template.tags,
-		prep_notes: template.prep_notes,
+		preparation_notes: template.preparation_notes,
 		due_at: nextDue.toISOString(),
 		created_at: new Date().toISOString(),
 	})

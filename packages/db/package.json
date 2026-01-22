@@ -8,7 +8,10 @@
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@libsql/client": "^0.17.0"
+		"@libsql/client": "^0.17.0",
+		"kysely": "^0.28.10",
+		"kysely-libsql": "^0.7.1",
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"vitest": "^4.0.16"
