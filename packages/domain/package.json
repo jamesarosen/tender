@@ -1,0 +1,17 @@
+{
+	"name": "@tender/domain",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Business logic for Tender",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"rrule": "^2.8.1",
+		"temporal-polyfill": "^0.2.5"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.16"
+	}
+}
