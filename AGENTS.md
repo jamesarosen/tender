@@ -14,3 +14,8 @@ This section is CRITICAL when working in [@tender/db](./packages/db).
 - Prefer soft-delete to disallow hard delete with cascade
 - Define Kysely types using raw database types
 - Define Zod schemas for application-land types
+
+# Code
+
+- Build URLs using structured functions like `URL` and `URLSearchParams`. Avoid
+  building URLs via string concatenation.
