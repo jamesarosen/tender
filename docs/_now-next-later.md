@@ -1,9 +1,6 @@
 # Now
 
-- LLM-unavailable flow: app degrades to basic TODO tracking. Can still ask for
-  and record reflections, but agent can't dig in on them.
-- Add CHECK constraints with `json_valid()` to JSON columns (tags, recurrence,
-  payload)
+- TUI implementation
 
 ---
 

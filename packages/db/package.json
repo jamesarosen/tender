@@ -5,7 +5,8 @@
 	"private": true,
 	"description": "Database layer for Tender",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./test-setup": "./src/test-setup.ts"
 	},
 	"dependencies": {
 		"@libsql/client": "^0.17.0",

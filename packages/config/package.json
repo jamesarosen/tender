@@ -1,0 +1,17 @@
+{
+	"name": "@tender/config",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Configuration management for Tender with XDG path resolution",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"zod": "^3.24.4"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "^9.5.1",
+		"vitest": "^4.0.16"
+	}
+}

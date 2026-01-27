@@ -1,19 +1,17 @@
 {
-	"name": "@tender/domain",
+	"name": "@tender/agent",
 	"type": "module",
 	"version": "0.0.1",
 	"private": true,
-	"description": "Business logic for Tender",
+	"description": "LLM agent scaffolding with availability state machine and prioritization strategies",
 	"exports": {
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@libsql/client": "^0.17.0",
+		"@tender/config": "workspace:*",
 		"@tender/db": "workspace:*",
-		"kysely": "^0.28.10",
-		"rrule": "^2.8.1",
-		"temporal-polyfill": "^0.2.5",
-		"uuid7-typed": "^1"
+		"xstate": "^5",
+		"zod": "^3.24"
 	},
 	"devDependencies": {
 		"vitest": "^4.0.16"
