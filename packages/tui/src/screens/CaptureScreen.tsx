@@ -74,13 +74,8 @@ export function CaptureScreen({ db }: CaptureScreenProps) {
 		} else if (key.tab && mode === 'description') {
 			// Tab to expand options
 			setMode('due')
-		} else if (key.return) {
-			if (mode === 'description') {
-				handleSubmit()
-			} else if (mode === 'due') {
-				handleSubmit()
-			}
 		}
+		// Note: Enter/return is handled by TextInput's onSubmit prop
 	})
 
 	return (
