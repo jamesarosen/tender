@@ -34,6 +34,7 @@ const DAY_KEYS: KeyBinding[] = [
 	{ key: 'j / Down', description: 'Next task' },
 	{ key: 'k / Up', description: 'Previous task' },
 	{ key: 'Enter', description: 'Focus selected task' },
+	{ key: 'x', description: 'Delete task' },
 ]
 
 function KeyGroup({ title, keys }: { title: string; keys: KeyBinding[] }) {

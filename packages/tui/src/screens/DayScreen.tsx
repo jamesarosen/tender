@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database, Task } from '@tender/db'
+import { getDegradedResponse } from '@tender/agent'
 import { TaskListItem } from '../components/TaskCard.js'
 import { useTasks } from '../hooks/useTasks.js'
 import { useApp } from '../context/AppContext.js'
@@ -38,9 +39,10 @@ function groupTasks(tasks: Task[]): { today: Task[]; later: Task[] } {
 }
 
 export function DayScreen({ db }: DayScreenProps) {
-	const { tasks, loading } = useTasks(db)
+	const { tasks, loading, deleteTask } = useTasks(db)
 	const { navigate, selectTask } = useApp()
 	const [selectedIndex, setSelectedIndex] = useState(0)
+	const [message, setMessage] = useState<string | null>(null)
 
 	const visibleTasks = tasks.slice(0, MAX_VISIBLE_TASKS)
 	const { today, later } = groupTasks(tasks)
@@ -53,6 +55,19 @@ export function DayScreen({ db }: DayScreenProps) {
 		}
 	}, [visibleTasks, selectedIndex, selectTask, navigate])
 
+	const handleDelete = useCallback(async () => {
+		const task = visibleTasks[selectedIndex]
+		if (task) {
+			await deleteTask(task.id)
+			setMessage(getDegradedResponse('taskDeleted'))
+			setTimeout(() => setMessage(null), 2000)
+			// Adjust selection if we deleted the last item
+			if (selectedIndex >= visibleTasks.length - 1 && selectedIndex > 0) {
+				setSelectedIndex(selectedIndex - 1)
+			}
+		}
+	}, [visibleTasks, selectedIndex, deleteTask])
+
 	useInput((input, key) => {
 		if (key.escape) {
 			navigate('focus')
@@ -62,6 +77,8 @@ export function DayScreen({ db }: DayScreenProps) {
 			setSelectedIndex((i) => Math.min(i + 1, visibleTasks.length - 1))
 		} else if (input === 'k' || key.upArrow) {
 			setSelectedIndex((i) => Math.max(i - 1, 0))
+		} else if (input === 'x') {
+			handleDelete()
 		}
 	})
 
@@ -137,8 +154,14 @@ export function DayScreen({ db }: DayScreenProps) {
 				</Box>
 			)}
 
+			{message && (
+				<Box marginTop={1}>
+					<Text color="gray">{message}</Text>
+				</Box>
+			)}
+
 			<Box marginTop={1}>
-				<Text dimColor>j/k: navigate • Enter: focus • Esc: back</Text>
+				<Text dimColor>j/k: navigate • Enter: focus • x: delete • Esc: back</Text>
 			</Box>
 		</Box>
 	)
