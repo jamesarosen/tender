@@ -13,6 +13,7 @@
 		"lint": "oxlint",
 		"lint:ci": "oxlint --format github",
 		"lint:fix": "oxlint --fix",
+		"tender": "tsx packages/cli/src/index.ts",
 		"test:ci": "vitest run --reporter=default --reporter=github-actions",
 		"test": "pnpm run test:watch",
 		"test:run": "vitest run",

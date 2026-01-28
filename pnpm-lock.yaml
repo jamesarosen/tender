@@ -59,6 +59,25 @@ importers:
         specifier: ^4.0.16
         version: 4.0.17(@types/node@25.0.9)(tsx@4.21.0)
 
+  packages/cli:
+    dependencies:
+      '@tender/agent':
+        specifier: workspace:*
+        version: link:../agent
+      '@tender/config':
+        specifier: workspace:*
+        version: link:../config
+      '@tender/db':
+        specifier: workspace:*
+        version: link:../db
+      '@tender/tui':
+        specifier: workspace:*
+        version: link:../tui
+    devDependencies:
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.17(@types/node@25.0.9)(tsx@4.21.0)
+
   packages/config:
     dependencies:
       zod:
@@ -112,6 +131,46 @@ importers:
         specifier: ^1
         version: 1.1.0
     devDependencies:
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.17(@types/node@25.0.9)(tsx@4.21.0)
+
+  packages/tui:
+    dependencies:
+      '@tender/agent':
+        specifier: workspace:*
+        version: link:../agent
+      '@tender/config':
+        specifier: workspace:*
+        version: link:../config
+      '@tender/db':
+        specifier: workspace:*
+        version: link:../db
+      '@tender/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@xstate/react':
+        specifier: ^5
+        version: 5.0.5(@types/react@19.2.8)(react@19.2.3)(xstate@5.25.1)
+      ink:
+        specifier: ^6.6.0
+        version: 6.6.0(@types/react@19.2.8)(react@19.2.3)
+      kysely:
+        specifier: ^0.28.10
+        version: 0.28.10
+      react:
+        specifier: ^19.2.3
+        version: 19.2.3
+      uuid7-typed:
+        specifier: ^1
+        version: 1.1.0
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.8
+        version: 19.2.8
+      ink-testing-library:
+        specifier: ^4.0.0
+        version: 4.0.0(@types/react@19.2.8)
       vitest:
         specifier: ^4.0.16
         version: 4.0.17(@types/node@25.0.9)(tsx@4.21.0)
@@ -576,6 +635,15 @@ packages:
   '@vitest/utils@4.0.17':
     resolution: {integrity: sha512-RG6iy+IzQpa9SB8HAFHJ9Y+pTzI+h8553MrciN9eC6TFBErqrQaTas4vG+MVj8S4uKk8uTT2p0vgZPnTdxd96w==}
 
+  '@xstate/react@5.0.5':
+    resolution: {integrity: sha512-MfF/cPHa3lNKJmGFpUycMbNP25qBXyZXrxc8VYNroAu0Nnk0DV5WzAkTcQXma0xEC4dSwsoA+YQuKbZATtqvgg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      xstate: ^5.19.4
+    peerDependenciesMeta:
+      xstate:
+        optional: true
+
   ansi-escapes@7.2.0:
     resolution: {integrity: sha512-g6LhBsl+GBPRWGWsBtutpzBYuIIdBkLEvad5C/va/74Db018+5TZiyA26cZJAr3Rft5lprVqOIPxf5Vid6tqAw==}
     engines: {node: '>=18'}
@@ -699,6 +767,15 @@ packages:
   indent-string@5.0.0:
     resolution: {integrity: sha512-m6FAo/spmsW2Ab2fU35JTYwtOKa2yAwXSwgjSv1TJzh4Mh7mC3lzAOVLBprb72XsTrgkEIsl7YrFNAiDiRhIGg==}
     engines: {node: '>=12'}
+
+  ink-testing-library@4.0.0:
+    resolution: {integrity: sha512-yF92kj3pmBvk7oKbSq5vEALO//o7Z9Ck/OaLNlkzXNeYdwfpxMQkSowGTFUCS5MSu9bWfSZMewGpp7bFc66D7Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   ink@6.6.0:
     resolution: {integrity: sha512-QDt6FgJxgmSxAelcOvOHUvFxbIUjVpCH5bx+Slvc5m7IEcpGt3dYwbz/L+oRnqEGeRvwy1tineKK4ect3nW1vQ==}
@@ -922,6 +999,20 @@ packages:
 
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+
+  use-isomorphic-layout-effect@1.2.1:
+    resolution: {integrity: sha512-tpZZ+EX0gaghDAiFR37hj5MgY6ZN55kLiPkJsKxBMZ6GZdOSPJXiOzPM984oPYZ5AnehYx5WQp1+ME8I/P/pRA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   uuid7-typed@1.1.0:
     resolution: {integrity: sha512-yWm46X6BuvZiPnvqtHy24zXBhoMZUuAuyQI4CfAlxO/b/jOWwFxiZuAd/rLXq4rYMSojmiIYIC6KKUAwfTRC8A==}
@@ -1397,6 +1488,16 @@ snapshots:
       '@vitest/pretty-format': 4.0.17
       tinyrainbow: 3.0.3
 
+  '@xstate/react@5.0.5(@types/react@19.2.8)(react@19.2.3)(xstate@5.25.1)':
+    dependencies:
+      react: 19.2.3
+      use-isomorphic-layout-effect: 1.2.1(@types/react@19.2.8)(react@19.2.3)
+      use-sync-external-store: 1.6.0(react@19.2.3)
+    optionalDependencies:
+      xstate: 5.25.1
+    transitivePeerDependencies:
+      - '@types/react'
+
   ansi-escapes@7.2.0:
     dependencies:
       environment: 1.1.0
@@ -1510,6 +1611,10 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   indent-string@5.0.0: {}
+
+  ink-testing-library@4.0.0(@types/react@19.2.8):
+    optionalDependencies:
+      '@types/react': 19.2.8
 
   ink@6.6.0(@types/react@19.2.8)(react@19.2.3):
     dependencies:
@@ -1752,6 +1857,16 @@ snapshots:
 
   undici-types@7.16.0:
     optional: true
+
+  use-isomorphic-layout-effect@1.2.1(@types/react@19.2.8)(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+    optionalDependencies:
+      '@types/react': 19.2.8
+
+  use-sync-external-store@1.6.0(react@19.2.3):
+    dependencies:
+      react: 19.2.3
 
   uuid7-typed@1.1.0:
     dependencies:

@@ -1,0 +1,26 @@
+{
+	"name": "@tender/tui",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Terminal UI for Tender - degraded-first task management interface",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@tender/agent": "workspace:*",
+		"@tender/config": "workspace:*",
+		"@tender/db": "workspace:*",
+		"@tender/domain": "workspace:*",
+		"@xstate/react": "^5",
+		"ink": "^6.6.0",
+		"kysely": "^0.28.10",
+		"react": "^19.2.3",
+		"uuid7-typed": "^1"
+	},
+	"devDependencies": {
+		"@types/react": "^19.2.8",
+		"ink-testing-library": "^4.0.0",
+		"vitest": "^4.0.16"
+	}
+}

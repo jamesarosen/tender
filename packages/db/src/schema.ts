@@ -92,6 +92,9 @@ export const signalKindSchema = z.enum([
 	'completed',
 	'surfaced',
 	'reflection',
+	'session_started',
+	'prompt_shown',
+	'llm_fallback',
 ])
 
 export type SignalKind = z.infer<typeof signalKindSchema>

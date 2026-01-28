@@ -1,0 +1,22 @@
+{
+	"name": "@tender/cli",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Command-line interface for Tender",
+	"bin": {
+		"tender": "./src/index.ts"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@tender/agent": "workspace:*",
+		"@tender/config": "workspace:*",
+		"@tender/db": "workspace:*",
+		"@tender/tui": "workspace:*"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.16"
+	}
+}
