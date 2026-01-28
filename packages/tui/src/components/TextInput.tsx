@@ -1,6 +1,32 @@
 import { useState, useEffect } from 'react'
 import { Text, useInput } from 'ink'
 
+interface CursorProps {
+	active: boolean
+}
+
+function Cursor({ active }: CursorProps) {
+	const [visible, setVisible] = useState(true)
+
+	useEffect(() => {
+		if (!active) return
+
+		const interval = setInterval(() => {
+			setVisible((v) => !v)
+		}, 500)
+
+		return () => clearInterval(interval)
+	}, [active])
+
+	const show = visible && active
+
+	return (
+		<Text color={show ? 'cyan' : undefined} dimColor={!show}>
+			_
+		</Text>
+	)
+}
+
 export interface TextInputProps {
 	value: string
 	onChange: (value: string) => void
@@ -16,19 +42,6 @@ export function TextInput({
 	placeholder = '',
 	focus = true,
 }: TextInputProps) {
-	const [cursorVisible, setCursorVisible] = useState(true)
-
-	// Blink cursor
-	useEffect(() => {
-		if (!focus) return
-
-		const interval = setInterval(() => {
-			setCursorVisible((v) => !v)
-		}, 500)
-
-		return () => clearInterval(interval)
-	}, [focus])
-
 	useInput(
 		(input, key) => {
 			if (!focus) return
@@ -56,7 +69,6 @@ export function TextInput({
 
 	const displayValue = value || (placeholder ? '' : '')
 	const showPlaceholder = !value && placeholder
-	const cursor = cursorVisible && focus ? '_' : ' '
 
 	return (
 		<Text>
@@ -65,7 +77,7 @@ export function TextInput({
 			) : (
 				<Text>{displayValue}</Text>
 			)}
-			<Text color="cyan">{cursor}</Text>
+			<Cursor active={focus} />
 		</Text>
 	)
 }
