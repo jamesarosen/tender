@@ -75,9 +75,11 @@ export function TextInput({
 			{showPlaceholder ? (
 				<Text dimColor>{placeholder}</Text>
 			) : (
-				<Text>{displayValue}</Text>
+				<>
+					<Text>{displayValue}</Text>
+					<Cursor active={focus} />
+				</>
 			)}
-			<Cursor active={focus} />
 		</Text>
 	)
 }
