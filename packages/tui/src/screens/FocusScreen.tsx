@@ -26,7 +26,9 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
 	// Track the task we're reflecting on (keeps showing it until reflection is done)
-	const [reflectingTask, setReflectingTask] = useState<ReflectingTask | null>(null)
+	const [reflectingTask, setReflectingTask] = useState<ReflectingTask | null>(
+		null
+	)
 
 	const currentTask = tasks[0] ?? null
 	// Show the reflecting task if we're in reflection mode, otherwise show current task
@@ -57,8 +59,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		await recordSignal(db, { taskId: currentTask.id, kind: 'completed' })
 
 		// Check if we should show reflection
-		const shouldReflect =
-			taskStats.deferralCount >= 2 || Math.random() < 0.2
+		const shouldReflect = taskStats.deferralCount >= 2 || Math.random() < 0.2
 
 		if (shouldReflect) {
 			setReflectingTask(taskToReflect)
@@ -129,7 +130,14 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			setReflectingTask(null)
 			dismissReflection()
 		},
-		[reflectingTask, currentTask, db, activePrompt, showMessage, dismissReflection]
+		[
+			reflectingTask,
+			currentTask,
+			db,
+			activePrompt,
+			showMessage,
+			dismissReflection,
+		]
 	)
 
 	const handleReflectionSkip = useCallback(() => {
