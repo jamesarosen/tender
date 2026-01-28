@@ -21,7 +21,7 @@ export interface FocusScreenProps {
 
 export function FocusScreen({ db }: FocusScreenProps) {
 	const { tasks, loading, completeTask, startTask, refresh } = useTasks(db)
-	const { navigate, pushModal } = useApp()
+	const { navigate, pushModal, state, selectTask } = useApp()
 	const { activePrompt, showReflection, dismissReflection } = useReflection()
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
@@ -30,7 +30,11 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		null
 	)
 
-	const currentTask = tasks[0] ?? null
+	// If a task was selected from Day view, show that one; otherwise show first task
+	const selectedTask = state.selectedTaskId
+		? tasks.find((t) => t.id === state.selectedTaskId)
+		: null
+	const currentTask = selectedTask ?? tasks[0] ?? null
 	// Show the reflecting task if we're in reflection mode, otherwise show current task
 	const displayTask = reflectingTask?.task ?? currentTask
 	const displayStats = reflectingTask?.stats ?? taskStats
@@ -58,6 +62,9 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		await completeTask(currentTask.id)
 		await recordSignal(db, { taskId: currentTask.id, kind: 'completed' })
 
+		// Clear selection so we return to priority order after this task
+		selectTask(null)
+
 		// Check if we should show reflection
 		const shouldReflect = taskStats.deferralCount >= 2 || Math.random() < 0.2
 
@@ -75,7 +82,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		} else {
 			showMessage(getDegradedResponse('completionAcknowledged'))
 		}
-	}, [currentTask, taskStats, completeTask, db, showReflection, showMessage])
+	}, [currentTask, taskStats, completeTask, db, selectTask, showReflection, showMessage])
 
 	const handleSkip = useCallback(async () => {
 		if (!currentTask || !taskStats) return
@@ -88,6 +95,9 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			kind: 'deferred',
 		})
 
+		// Clear selection so we return to priority order after this task
+		selectTask(null)
+
 		// Check if we should show reflection (on 2nd+ deferral)
 		const shouldReflect = taskStats.deferralCount >= 1
 
@@ -98,7 +108,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 
 		showMessage(getDegradedResponse('skipAcknowledged'))
 		await refresh()
-	}, [currentTask, taskStats, db, showReflection, showMessage, refresh])
+	}, [currentTask, taskStats, db, selectTask, showReflection, showMessage, refresh])
 
 	const handleStart = useCallback(async () => {
 		if (!currentTask) return
