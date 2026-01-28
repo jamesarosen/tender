@@ -79,6 +79,8 @@ export function DayScreen({ db }: DayScreenProps) {
 			setSelectedIndex((i) => Math.max(i - 1, 0))
 		} else if (input === 'x') {
 			handleDelete()
+		} else if (input === 'a') {
+			navigate('capture')
 		}
 	})
 
@@ -161,7 +163,9 @@ export function DayScreen({ db }: DayScreenProps) {
 			)}
 
 			<Box marginTop={1}>
-				<Text dimColor>j/k: navigate • Enter: focus • x: delete • Esc: back</Text>
+				<Text dimColor>
+					j/k: navigate • Enter: focus • a: add • x: delete • Esc: back
+				</Text>
 			</Box>
 		</Box>
 	)
