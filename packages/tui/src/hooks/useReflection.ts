@@ -40,8 +40,9 @@ export function shouldShowReflection(
 		case 'completion':
 			// Always show if task was deferred 2+ times (breakthrough completion)
 			if (stats.deferralCount >= 2) return true
-			// Otherwise 20% chance
-			return Math.random() < 0.2
+			// Otherwise 70% chance
+			// TODO: make this user-configurable
+			return Math.random() < 0.7
 		case 'deferral':
 			// Show on 2nd+ deferral
 			return stats.deferralCount >= 1 // Will be 2 after this deferral
