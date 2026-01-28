@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database } from '@tender/db'
 import { getDegradedResponse } from '@tender/agent'
+import { Field, Label } from '../components/Field.js'
 import { TextInput } from '../components/TextInput.js'
 import { useTasks } from '../hooks/useTasks.js'
 import { useApp } from '../context/AppContext.js'
@@ -84,8 +85,8 @@ export function CaptureScreen({ db }: CaptureScreenProps) {
 				<Text bold>Add Task</Text>
 			</Box>
 
-			<Box>
-				<Text>What needs doing? </Text>
+			<Field>
+				<Label>What needs doing?</Label>
 				{mode === 'description' ? (
 					<TextInput
 						value={description}
@@ -97,18 +98,20 @@ export function CaptureScreen({ db }: CaptureScreenProps) {
 				) : (
 					<Text>{description}</Text>
 				)}
-			</Box>
+			</Field>
 
 			{mode === 'due' && (
 				<Box marginTop={1}>
-					<Text>Due: </Text>
-					<TextInput
-						value={dueDate}
-						onChange={setDueDate}
-						onSubmit={handleSubmit}
-						placeholder="today, tomorrow, or YYYY-MM-DD"
-						focus={mode === 'due'}
-					/>
+					<Field>
+						<Label>Due:</Label>
+						<TextInput
+							value={dueDate}
+							onChange={setDueDate}
+							onSubmit={handleSubmit}
+							placeholder="today, tomorrow, or YYYY-MM-DD"
+							focus={mode === 'due'}
+						/>
+					</Field>
 				</Box>
 			)}
 

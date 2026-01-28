@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Box, Text } from 'ink'
+import { Field, Label } from './Field.js'
 import { TextInput } from './TextInput.js'
 
 export interface ReflectionPromptProps {
@@ -29,21 +30,19 @@ export function ReflectionPrompt({
 				<Text dimColor>─────────────────────────────────────</Text>
 			</Box>
 
-			<Box marginTop={1}>
-				<Text italic color="cyan">
-					"{question}"
-				</Text>
-			</Box>
-
-			<Box marginTop={1}>
-				<Text dimColor>{'> '}</Text>
+			<Field marginTop={1}>
+				<Label>
+					<Text italic color="cyan">
+						"{question}"
+					</Text>
+				</Label>
 				<TextInput
 					value={value}
 					onChange={setValue}
 					onSubmit={handleSubmit}
 					placeholder="(Enter to skip)"
 				/>
-			</Box>
+			</Field>
 		</Box>
 	)
 }

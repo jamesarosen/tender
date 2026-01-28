@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database } from '@tender/db'
+import { Field, Label } from '../components/Field.js'
 import { TextInput } from '../components/TextInput.js'
 import { useTasks } from '../hooks/useTasks.js'
 import { useApp } from '../context/AppContext.js'
@@ -58,19 +59,15 @@ export function FirstRunScreen({ db }: FirstRunScreenProps) {
 
 	return (
 		<Box flexDirection="column" paddingY={2} paddingX={4}>
-			<Box marginBottom={2}>
-				<Text>Let's start: What's one thing on your mind right now?</Text>
-			</Box>
-
-			<Box>
-				<Text dimColor>{'> '}</Text>
+			<Field marginBottom={2}>
+				<Label>Let's start: What's one thing on your mind right now?</Label>
 				<TextInput
 					value={value}
 					onChange={setValue}
 					onSubmit={handleSubmit}
 					placeholder="Enter your first task"
 				/>
-			</Box>
+			</Field>
 
 			<Box marginTop={2}>
 				<Text dimColor>Press Enter to add this task and begin.</Text>
