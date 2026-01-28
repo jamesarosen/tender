@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
-import type { Database } from '@tender/db'
+import type { Database, Task } from '@tender/db'
 import { recordSignal } from '@tender/domain'
 import { getDegradedResponse, formatResponse } from '@tender/agent'
 import { TaskCard } from '../components/TaskCard.js'
@@ -9,6 +9,11 @@ import { ReflectionPrompt as ReflectionPromptComponent } from '../components/Ref
 import { useTasks, getTaskStats, type TaskStats } from '../hooks/useTasks.js'
 import { useReflection } from '../hooks/useReflection.js'
 import { useApp } from '../context/AppContext.js'
+
+interface ReflectingTask {
+	task: Task
+	stats: TaskStats
+}
 
 export interface FocusScreenProps {
 	db: Kysely<Database>
@@ -20,8 +25,13 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	const { activePrompt, showReflection, dismissReflection } = useReflection()
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
+	// Track the task we're reflecting on (keeps showing it until reflection is done)
+	const [reflectingTask, setReflectingTask] = useState<ReflectingTask | null>(null)
 
 	const currentTask = tasks[0] ?? null
+	// Show the reflecting task if we're in reflection mode, otherwise show current task
+	const displayTask = reflectingTask?.task ?? currentTask
+	const displayStats = reflectingTask?.stats ?? taskStats
 
 	// Load stats when task changes
 	useEffect(() => {
@@ -40,10 +50,20 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	const handleComplete = useCallback(async () => {
 		if (!currentTask || !taskStats) return
 
+		// Store task info before completing (for reflection)
+		const taskToReflect = { task: currentTask, stats: taskStats }
+
 		await completeTask(currentTask.id)
 		await recordSignal(db, { taskId: currentTask.id, kind: 'completed' })
 
-		showReflection('completion', taskStats)
+		// Check if we should show reflection
+		const shouldReflect =
+			taskStats.deferralCount >= 2 || Math.random() < 0.2
+
+		if (shouldReflect) {
+			setReflectingTask(taskToReflect)
+			showReflection('completion', taskStats)
+		}
 
 		if (taskStats.deferralCount >= 2) {
 			showMessage(
@@ -59,12 +79,22 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	const handleSkip = useCallback(async () => {
 		if (!currentTask || !taskStats) return
 
+		// Store task info before skipping (for reflection)
+		const taskToReflect = { task: currentTask, stats: taskStats }
+
 		await recordSignal(db, {
 			taskId: currentTask.id,
 			kind: 'deferred',
 		})
 
-		showReflection('deferral', taskStats)
+		// Check if we should show reflection (on 2nd+ deferral)
+		const shouldReflect = taskStats.deferralCount >= 1
+
+		if (shouldReflect) {
+			setReflectingTask(taskToReflect)
+			showReflection('deferral', taskStats)
+		}
+
 		showMessage(getDegradedResponse('skipAcknowledged'))
 		await refresh()
 	}, [currentTask, taskStats, db, showReflection, showMessage, refresh])
@@ -82,10 +112,11 @@ export function FocusScreen({ db }: FocusScreenProps) {
 
 	const handleReflectionSubmit = useCallback(
 		async (text: string) => {
-			if (!currentTask) return
+			const taskForReflection = reflectingTask?.task ?? currentTask
+			if (!taskForReflection) return
 
 			await recordSignal(db, {
-				taskId: currentTask.id,
+				taskId: taskForReflection.id,
 				kind: 'reflection',
 				payload: {
 					text,
@@ -95,10 +126,16 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			})
 
 			showMessage(getDegradedResponse('reflectionRecorded'))
+			setReflectingTask(null)
 			dismissReflection()
 		},
-		[currentTask, db, activePrompt, showMessage, dismissReflection]
+		[reflectingTask, currentTask, db, activePrompt, showMessage, dismissReflection]
 	)
+
+	const handleReflectionSkip = useCallback(() => {
+		setReflectingTask(null)
+		dismissReflection()
+	}, [dismissReflection])
 
 	useInput((input, key) => {
 		// Don't handle keys when showing reflection prompt
@@ -127,7 +164,8 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		)
 	}
 
-	if (!currentTask) {
+	// Show "no tasks" only if there's no current task AND we're not reflecting
+	if (!currentTask && !reflectingTask) {
 		return (
 			<Box flexDirection="column" alignItems="center" paddingY={2}>
 				<Text>No tasks yet.</Text>
@@ -138,15 +176,24 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		)
 	}
 
+	// Edge case: reflecting on last task that was just completed
+	if (!displayTask) {
+		return (
+			<Box flexDirection="column" alignItems="center" paddingY={2}>
+				<Text dimColor>Loading...</Text>
+			</Box>
+		)
+	}
+
 	return (
 		<Box flexDirection="column" paddingY={1}>
 			<TaskCard
-				task={currentTask}
-				daysSinceCreated={taskStats?.daysSinceCreated}
+				task={displayTask}
+				daysSinceCreated={displayStats?.daysSinceCreated}
 				showDetails={true}
 			/>
 
-			{currentTask.started_at && (
+			{displayTask.started_at && !reflectingTask && (
 				<Box justifyContent="center" marginTop={1}>
 					<Text color="green">In progress...</Text>
 				</Box>
@@ -156,7 +203,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 				<ReflectionPromptComponent
 					question={activePrompt.question}
 					onSubmit={handleReflectionSubmit}
-					onSkip={dismissReflection}
+					onSkip={handleReflectionSkip}
 				/>
 			)}
 
