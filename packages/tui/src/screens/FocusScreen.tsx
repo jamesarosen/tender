@@ -82,7 +82,15 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		} else {
 			showMessage(getDegradedResponse('completionAcknowledged'))
 		}
-	}, [currentTask, taskStats, completeTask, db, selectTask, showReflection, showMessage])
+	}, [
+		currentTask,
+		taskStats,
+		completeTask,
+		db,
+		selectTask,
+		showReflection,
+		showMessage,
+	])
 
 	const handleSkip = useCallback(async () => {
 		if (!currentTask || !taskStats) return
@@ -108,7 +116,15 @@ export function FocusScreen({ db }: FocusScreenProps) {
 
 		showMessage(getDegradedResponse('skipAcknowledged'))
 		await refresh()
-	}, [currentTask, taskStats, db, selectTask, showReflection, showMessage, refresh])
+	}, [
+		currentTask,
+		taskStats,
+		db,
+		selectTask,
+		showReflection,
+		showMessage,
+		refresh,
+	])
 
 	const handleStart = useCallback(async () => {
 		if (!currentTask) return
