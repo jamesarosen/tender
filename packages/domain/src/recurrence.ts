@@ -1,4 +1,5 @@
-import { RRule, rrulestr } from 'rrule'
+import rruleLib, { type RRule as RRuleType } from 'rrule'
+const { RRule, rrulestr } = rruleLib
 import { Temporal } from 'temporal-polyfill'
 
 /**
@@ -103,7 +104,7 @@ export class RRuleRecurrence implements Recurrence {
 	readonly isValid: boolean
 	private readonly hasDtstart: boolean
 	// Only cache rule if it has embedded DTSTART (immutable)
-	private readonly cachedRule: RRule | null
+	private readonly cachedRule: RRuleType | null
 
 	constructor(private readonly ruleString: string) {
 		this.hasDtstart = ruleString.includes('DTSTART')
@@ -119,7 +120,7 @@ export class RRuleRecurrence implements Recurrence {
 		}
 
 		const afterDate = new Date(after)
-		let rule: RRule
+		let rule: RRuleType
 
 		if (this.cachedRule) {
 			// Rule has embedded DTSTART, use cached version
@@ -222,7 +223,7 @@ export const Recurrence = {
 
 function validateAndParseRRule(ruleString: string): {
 	isValid: boolean
-	rule: RRule | null
+	rule: RRuleType | null
 } {
 	if (!ruleString || ruleString.trim() === '') {
 		return { isValid: false, rule: null }
@@ -240,9 +241,9 @@ function validateAndParseRRule(ruleString: string): {
 			return { isValid: false, rule: null }
 		}
 
-		let rule: RRule
+		let rule: RRuleType
 		if (ruleString.includes('DTSTART') || ruleString.includes('RRULE:')) {
-			rule = rrulestr(ruleString) as RRule
+			rule = rrulestr(ruleString) as RRuleType
 		} else {
 			const options = RRule.parseString(ruleString)
 			if (options.freq === undefined || options.freq === null) {
