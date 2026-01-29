@@ -26,6 +26,18 @@ export function createKysely(client: Client): Kysely<Database> {
 	})
 }
 
+/**
+ * Converts a database path to a libsql URL.
+ * - `:memory:` stays as-is for ephemeral databases
+ * - File paths get `file:` prefix
+ */
+function toLibsqlUrl(path: string): string {
+	if (path === ':memory:') {
+		return ':memory:'
+	}
+	return `file:${path}`
+}
+
 /** Database connection with both raw client and typed Kysely instance */
 export interface DatabaseConnection {
 	/** Raw libsql client for direct queries */
@@ -39,10 +51,13 @@ export interface DatabaseConnection {
 /**
  * Creates a database connection with migrations applied.
  *
- * @param url - Database URL (e.g., 'file:./data.db' or ':memory:')
+ * @param path - Database path (e.g., './data.db' or ':memory:')
  * @returns Connection with both raw client and typed Kysely instance
  */
-export async function createDatabase(url: string): Promise<DatabaseConnection> {
+export async function createDatabase(
+	path: string
+): Promise<DatabaseConnection> {
+	const url = toLibsqlUrl(path)
 	const client = createClient({ url })
 
 	// Enable foreign key enforcement (off by default in SQLite)

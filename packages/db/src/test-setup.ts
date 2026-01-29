@@ -42,7 +42,7 @@ let templatePath: string | null = null
 async function getTemplatePath(): Promise<string> {
 	if (!templatePath) {
 		templatePath = join(tmpdir(), `tender-test-template-${randomUUID()}.db`)
-		const conn = await createDatabase(`file:${templatePath}`)
+		const conn = await createDatabase(templatePath)
 		conn.close()
 	}
 	return templatePath

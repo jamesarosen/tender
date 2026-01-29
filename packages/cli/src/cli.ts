@@ -37,18 +37,6 @@ function buildAvailabilityInput(
 	}
 }
 
-/**
- * Converts a database path to a libsql URL.
- * - `:memory:` stays as-is for ephemeral databases
- * - File paths get `file:` prefix
- */
-function toDbUrl(dbPath: string): string {
-	if (dbPath === ':memory:') {
-		return ':memory:'
-	}
-	return `file:${dbPath}`
-}
-
 export async function run(): Promise<void> {
 	// Load configuration
 	const config = await loadResolvedConfig()
@@ -58,7 +46,7 @@ export async function run(): Promise<void> {
 	if (dbPath !== ':memory:') {
 		await ensureDirectoryExists(dbPath)
 	}
-	const conn = await createDatabase(toDbUrl(dbPath))
+	const conn = await createDatabase(dbPath)
 
 	// Check if this is first run
 	const isFirstRun = await checkFirstRun(conn)
