@@ -22,6 +22,7 @@ describe('paths', () => {
 		delete process.env.XDG_DATA_HOME
 		delete process.env.XDG_STATE_HOME
 		delete process.env.XDG_CACHE_HOME
+		delete process.env.TENDER_DB_PATH
 	})
 
 	afterEach(() => {
@@ -87,6 +88,22 @@ describe('paths', () => {
 		it('respects XDG_DATA_HOME', () => {
 			process.env.XDG_DATA_HOME = '/custom/data'
 			expect(getDatabasePath()).toBe('/custom/data/tender/tender.db')
+		})
+
+		it('respects TENDER_DB_PATH override', () => {
+			process.env.TENDER_DB_PATH = '/custom/path/my.db'
+			expect(getDatabasePath()).toBe('/custom/path/my.db')
+		})
+
+		it('supports :memory: for ephemeral database', () => {
+			process.env.TENDER_DB_PATH = ':memory:'
+			expect(getDatabasePath()).toBe(':memory:')
+		})
+
+		it('TENDER_DB_PATH takes precedence over XDG_DATA_HOME', () => {
+			process.env.XDG_DATA_HOME = '/custom/data'
+			process.env.TENDER_DB_PATH = '/override/path.db'
+			expect(getDatabasePath()).toBe('/override/path.db')
 		})
 	})
 

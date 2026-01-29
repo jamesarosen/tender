@@ -1,6 +1,7 @@
 # Now
 
 - TUI implementation
+- DB path override (`--db-path` or `TENDER_DB_PATH`) for QA/testing
 
 ---
 
@@ -18,6 +19,8 @@
   operation each day). Turso will also help here.
 - Turso sync conflict resolution strategy (consider merging with Backup /
   Recovery)
+- Seed data generators (`@tender/fixtures`) for QA, demos, automated tests
+- Profile system (`--profile qa`) combining config + DB path + seed data
 
 ---
 
