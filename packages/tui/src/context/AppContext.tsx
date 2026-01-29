@@ -58,7 +58,7 @@ export interface AppProviderProps {
 
 export function AppProvider({
 	children,
-	initialScreen = 'focus',
+	initialScreen = 'day',
 	isFirstRun = false,
 }: AppProviderProps) {
 	const [state, dispatch] = useReducer(appReducer, {
