@@ -81,8 +81,17 @@ export function getConfigFilePath(): string {
 
 /**
  * Returns the path to the database file.
+ *
+ * Supports override via TENDER_DB_PATH environment variable.
+ * Special values:
+ * - `:memory:` for ephemeral in-memory database
+ * - Any file path for a custom database location
  */
 export function getDatabasePath(): string {
+	const override = process.env.TENDER_DB_PATH
+	if (override) {
+		return override
+	}
 	return join(getTenderPaths().data, 'tender.db')
 }
 

@@ -43,8 +43,10 @@ export async function run(): Promise<void> {
 
 	// Initialize database
 	const dbPath = getDatabasePath()
-	await ensureDirectoryExists(dbPath)
-	const conn = await createDatabase(`file:${dbPath}`)
+	if (dbPath !== ':memory:') {
+		await ensureDirectoryExists(dbPath)
+	}
+	const conn = await createDatabase(dbPath)
 
 	// Check if this is first run
 	const isFirstRun = await checkFirstRun(conn)
