@@ -7,6 +7,9 @@
 	"exports": {
 		".": "./src/index.ts"
 	},
+	"imports": {
+		"#src/*": "./src/*"
+	},
 	"dependencies": {
 		"@tender/agent": "workspace:*",
 		"@tender/config": "workspace:*",

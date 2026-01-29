@@ -3,10 +3,10 @@ import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database } from '@tender/db'
 import { getDegradedResponse } from '@tender/agent'
-import { Field, Label } from '../components/Field.js'
-import { TextInput } from '../components/TextInput.js'
-import { useTasks } from '../hooks/useTasks.js'
-import { useApp } from '../context/AppContext.js'
+import { Field, Label } from '#src/components/Field.js'
+import { TextInput } from '#src/components/TextInput.js'
+import { useTasks } from '#src/hooks/useTasks.js'
+import { useApp } from '#src/context/AppContext.js'
 
 export interface CaptureScreenProps {
 	db: Kysely<Database>

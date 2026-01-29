@@ -3,9 +3,9 @@ import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database, Task } from '@tender/db'
 import { getDegradedResponse } from '@tender/agent'
-import { TaskListItem } from '../components/TaskCard.js'
-import { useTasks } from '../hooks/useTasks.js'
-import { useApp } from '../context/AppContext.js'
+import { TaskListItem } from '#src/components/TaskCard.js'
+import { useTasks } from '#src/hooks/useTasks.js'
+import { useApp } from '#src/context/AppContext.js'
 
 export interface DayScreenProps {
 	db: Kysely<Database>

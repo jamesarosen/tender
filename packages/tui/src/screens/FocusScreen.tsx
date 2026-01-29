@@ -4,11 +4,11 @@ import type { Kysely } from 'kysely'
 import type { Database, Task } from '@tender/db'
 import { recordSignal } from '@tender/domain'
 import { getDegradedResponse, formatResponse } from '@tender/agent'
-import { TaskCard } from '../components/TaskCard.js'
-import { ReflectionPrompt as ReflectionPromptComponent } from '../components/ReflectionPrompt.js'
-import { useTasks, getTaskStats, type TaskStats } from '../hooks/useTasks.js'
-import { useReflection } from '../hooks/useReflection.js'
-import { useApp } from '../context/AppContext.js'
+import { TaskCard } from '#src/components/TaskCard.js'
+import { ReflectionPrompt as ReflectionPromptComponent } from '#src/components/ReflectionPrompt.js'
+import { useTasks, getTaskStats, type TaskStats } from '#src/hooks/useTasks.js'
+import { useReflection } from '#src/hooks/useReflection.js'
+import { useApp } from '#src/context/AppContext.js'
 
 interface ReflectingTask {
 	task: Task
