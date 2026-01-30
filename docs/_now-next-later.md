@@ -1,8 +1,5 @@
 # Now
 
-- TUI implementation
-- DB path override (`--db-path` or `TENDER_DB_PATH`) for QA/testing
-
 ---
 
 # Next
