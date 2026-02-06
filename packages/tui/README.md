@@ -15,3 +15,18 @@ When choosing colors for terminal output, we follow the guidance from Luna Razza
 - Prioritize readability across themes over aesthetic preference
 
 When adding colors to this TUI, prefer the "safe" subset of colors that work across terminal themes rather than assuming users share your terminal configuration.
+
+### Semantic color tokens
+
+Rather than hardcoding terminal colors directly, use the semantic tokens from `src/theme.ts`. This decouples intent from implementation, similar to CSS custom properties:
+
+| Token         | Color  | Usage                                        |
+| ------------- | ------ | -------------------------------------------- |
+| `interactive` | cyan   | Key hints, tags, prompts, headings           |
+| `success`     | green  | Active state, confirmation messages          |
+| `warning`     | yellow | Time-sensitive actions (e.g. undo countdown) |
+| `danger`      | red    | Errors, critical status                      |
+
+Use `dimColor` (Ink's built-in) for de-emphasized text like the status bar key hints.
+
+When adding a new color usage, check whether an existing semantic token fits before adding a new one.

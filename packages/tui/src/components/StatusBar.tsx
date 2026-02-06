@@ -1,10 +1,12 @@
 import { Box, Text } from 'ink'
 import type { LlmAvailabilityStateValue } from '@tender/agent'
+import { colors } from '#src/theme.js'
 
 export interface StatusBarProps {
 	llmStatus: LlmAvailabilityStateValue
 	retryAfterMs?: number | null
 	keyHints?: string
+	undoHint?: string | null
 }
 
 interface StatusDisplay {
@@ -46,6 +48,7 @@ export function StatusBar({
 	llmStatus,
 	retryAfterMs,
 	keyHints = DEFAULT_HINTS,
+	undoHint,
 }: StatusBarProps) {
 	const status = getStatusDisplay(llmStatus, retryAfterMs)
 
@@ -60,7 +63,8 @@ export function StatusBar({
 			justifyContent="space-between"
 		>
 			<Box>{status.show && <Text color={status.color}>{status.text}</Text>}</Box>
-			<Box>
+			<Box gap={1}>
+				{undoHint && <Text color={colors.warning}>{undoHint}</Text>}
 				<Text dimColor>{keyHints}</Text>
 			</Box>
 		</Box>

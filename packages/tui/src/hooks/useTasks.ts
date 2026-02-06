@@ -12,6 +12,7 @@ export interface UseTasksResult {
 	refresh: () => Promise<void>
 	createTask: (description: string, dueAt?: string) => Promise<Task>
 	completeTask: (taskId: string) => Promise<void>
+	uncompleteTask: (taskId: string) => Promise<void>
 	startTask: (taskId: string) => Promise<void>
 	deleteTask: (taskId: string) => Promise<void>
 }
@@ -97,6 +98,18 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		[db, refresh]
 	)
 
+	const uncompleteTask = useCallback(
+		async (taskId: string) => {
+			await db
+				.updateTable('tasks')
+				.set({ completed_at: null })
+				.where('id', '=', taskId)
+				.execute()
+			await refresh()
+		},
+		[db, refresh]
+	)
+
 	const startTask = useCallback(
 		async (taskId: string) => {
 			const task = tasks.find((t) => t.id === taskId)
@@ -132,6 +145,7 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		refresh,
 		createTask,
 		completeTask,
+		uncompleteTask,
 		startTask,
 		deleteTask,
 	}

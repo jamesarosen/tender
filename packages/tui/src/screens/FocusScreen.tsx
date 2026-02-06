@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database, Task } from '@tender/db'
-import { recordSignal } from '@tender/domain'
+import { recordSignal, deleteSignal } from '@tender/domain'
 import { getDegradedResponse, formatResponse } from '@tender/agent'
 import { TaskCard } from '#src/components/TaskCard.js'
 import { ReflectionPrompt as ReflectionPromptComponent } from '#src/components/ReflectionPrompt.js'
@@ -20,8 +20,18 @@ export interface FocusScreenProps {
 }
 
 export function FocusScreen({ db }: FocusScreenProps) {
-	const { tasks, loading, completeTask, startTask, refresh } = useTasks(db)
-	const { navigate, pushModal, state, selectTask } = useApp()
+	const { tasks, loading, completeTask, uncompleteTask, startTask, refresh } =
+		useTasks(db)
+	const {
+		navigate,
+		pushModal,
+		state,
+		selectTask,
+		startUndo,
+		tickUndo,
+		clearUndo,
+		setUndoReflectionSignal,
+	} = useApp()
 	const { activePrompt, showReflection, dismissReflection } = useReflection()
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
@@ -60,7 +70,10 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		const taskToReflect = { task: currentTask, stats: taskStats }
 
 		await completeTask(currentTask.id)
-		await recordSignal(db, { taskId: currentTask.id, kind: 'completed' })
+		const signal = await recordSignal(db, {
+			taskId: currentTask.id,
+			kind: 'completed',
+		})
 
 		// Clear selection so we return to priority order after this task
 		selectTask(null)
@@ -72,6 +85,16 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			setReflectingTask(taskToReflect)
 			showReflection('completion', taskStats)
 		}
+
+		// Start undo window: seconds=0 during reflection (paused), 5 otherwise
+		startUndo(
+			{
+				taskId: currentTask.id,
+				signalId: signal.id,
+				reflectionSignalId: null,
+			},
+			shouldReflect ? 0 : 5
+		)
 
 		if (taskStats.deferralCount >= 2) {
 			showMessage(
@@ -90,6 +113,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		selectTask,
 		showReflection,
 		showMessage,
+		startUndo,
 	])
 
 	const handleSkip = useCallback(async () => {
@@ -137,12 +161,18 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		})
 	}, [currentTask, startTask, db])
 
+	// Ref to access undo action in callbacks without stale closures
+	const undoActionRef = useRef(state.undoAction)
+	useEffect(() => {
+		undoActionRef.current = state.undoAction
+	}, [state.undoAction])
+
 	const handleReflectionSubmit = useCallback(
 		async (text: string) => {
 			const taskForReflection = reflectingTask?.task ?? currentTask
 			if (!taskForReflection) return
 
-			await recordSignal(db, {
+			const reflectionSignal = await recordSignal(db, {
 				taskId: taskForReflection.id,
 				kind: 'reflection',
 				payload: {
@@ -152,9 +182,25 @@ export function FocusScreen({ db }: FocusScreenProps) {
 				},
 			})
 
+			// Track reflection signal so undo can clean it up
+			if (undoActionRef.current) {
+				setUndoReflectionSignal(reflectionSignal.id)
+			}
+
 			showMessage(getDegradedResponse('reflectionRecorded'))
 			setReflectingTask(null)
 			dismissReflection()
+
+			// Start fresh undo countdown now that reflection is done
+			if (undoActionRef.current) {
+				startUndo(
+					{
+						...undoActionRef.current,
+						reflectionSignalId: reflectionSignal.id,
+					},
+					5
+				)
+			}
 		},
 		[
 			reflectingTask,
@@ -163,13 +209,65 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			activePrompt,
 			showMessage,
 			dismissReflection,
+			setUndoReflectionSignal,
+			startUndo,
 		]
 	)
 
 	const handleReflectionSkip = useCallback(() => {
 		setReflectingTask(null)
 		dismissReflection()
-	}, [dismissReflection])
+
+		// Start fresh undo countdown now that reflection is done
+		if (undoActionRef.current) {
+			startUndo(undoActionRef.current, 5)
+		}
+	}, [dismissReflection, startUndo])
+
+	const handleUndo = useCallback(async () => {
+		const undo = undoActionRef.current
+		if (!undo) return
+
+		await uncompleteTask(undo.taskId)
+		await deleteSignal(db, undo.signalId)
+		if (undo.reflectionSignalId) {
+			await deleteSignal(db, undo.reflectionSignalId)
+		}
+
+		clearUndo()
+		setReflectingTask(null)
+		dismissReflection()
+		selectTask(undo.taskId)
+		showMessage('Restored')
+	}, [uncompleteTask, db, clearUndo, dismissReflection, selectTask, showMessage])
+
+	// Separate useInput for undo keys — not gated behind activePrompt
+	useInput((input, key) => {
+		if (!state.undoAction) return
+
+		if (activePrompt) {
+			// During reflection: ctrl+u to undo
+			if (key.ctrl && input === 'u') {
+				handleUndo()
+			}
+		} else {
+			// Normal mode: u to undo
+			if (input === 'u') {
+				handleUndo()
+			}
+		}
+	})
+
+	// Countdown interval: ticks only when undo is active and not in reflection
+	useEffect(() => {
+		if (!state.undoAction || state.undoSecondsLeft <= 0 || activePrompt) return
+
+		const interval = setInterval(() => {
+			tickUndo()
+		}, 1000)
+
+		return () => clearInterval(interval)
+	}, [state.undoAction, state.undoSecondsLeft, activePrompt, tickUndo])
 
 	useInput((input, key) => {
 		// Don't handle keys when showing reflection prompt

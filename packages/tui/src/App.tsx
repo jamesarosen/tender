@@ -51,6 +51,14 @@ function ModalLayer() {
 	}
 }
 
+function getUndoHint(
+	state: import('./context/AppContext.js').AppState
+): string | null {
+	if (!state.undoAction) return null
+	if (state.undoSecondsLeft <= 0) return '[^u]ndo'
+	return `[u]ndo/${state.undoSecondsLeft}`
+}
+
 function StatusBarWithAvailability() {
 	const { status, context } = useAvailability()
 	const { state } = useApp()
@@ -68,6 +76,7 @@ function StatusBarWithAvailability() {
 			llmStatus={status}
 			retryAfterMs={context.retryAfterMs}
 			keyHints={keyHints}
+			undoHint={getUndoHint(state)}
 		/>
 	)
 }

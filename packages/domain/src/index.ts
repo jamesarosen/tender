@@ -11,6 +11,7 @@ export type { Recurrence as RecurrenceInstance } from './recurrence.js'
 // Signal recording and retrieval
 export {
 	recordSignal,
+	deleteSignal,
 	getSignalsForTask,
 	getSignalsByKind,
 	countDeferrals,

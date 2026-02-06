@@ -25,6 +25,8 @@ const GLOBAL_KEYS: KeyBinding[] = [
 const FOCUS_KEYS: KeyBinding[] = [
 	{ key: 's', description: 'Skip / defer task' },
 	{ key: 'c', description: 'Complete task' },
+	{ key: 'u', description: 'Undo complete (within 5s)' },
+	{ key: '^u', description: 'Undo complete (during reflection)' },
 	{ key: 'Enter', description: 'Start / stop task' },
 	{ key: 'd', description: 'View day' },
 	{ key: 'a', description: 'Add new task' },
