@@ -30,10 +30,21 @@ describe('TaskCard', () => {
 		expect(lastFrame()).toContain('Email grandma')
 	})
 
-	it('displays tags', () => {
+	it('displays badge tags not present inline', () => {
 		const task = createMockTask({ tags: ['family', 'urgent'] })
 		const { lastFrame } = render(<TaskCard task={task} />)
 		expect(lastFrame()).toContain('[family]')
+		expect(lastFrame()).toContain('[urgent]')
+	})
+
+	it('hides badge for tags that appear inline as #tag', () => {
+		const task = createMockTask({
+			description: 'Call mom #family',
+			tags: ['family', 'urgent'],
+		})
+		const { lastFrame } = render(<TaskCard task={task} />)
+		expect(lastFrame()).toContain('#family')
+		expect(lastFrame()).not.toContain('[family]')
 		expect(lastFrame()).toContain('[urgent]')
 	})
 

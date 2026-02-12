@@ -1,5 +1,7 @@
 import { Box, Text } from 'ink'
 import type { Task } from '@tender/db'
+import { extractTags } from '@tender/domain'
+import { TagText, tagColor } from './TagText.js'
 
 export interface TaskCardProps {
 	task: Task
@@ -36,11 +38,15 @@ export function TaskCard({
 	const dueDisplay = formatDueDate(task.due_at)
 	const ageDisplay = formatAge(daysSinceCreated)
 
+	// Tags that appear inline as #tag in description don't need badges
+	const inlineTags = new Set(extractTags(task.description))
+	const badgeTags = task.tags.filter((tag) => !inlineTags.has(tag))
+
 	return (
 		<Box flexDirection="column" paddingX={2}>
 			<Box justifyContent="center">
 				<Text bold wrap="wrap">
-					"{task.description}"
+					"<TagText bold>{task.description}</TagText>"
 				</Text>
 			</Box>
 
@@ -56,10 +62,10 @@ export function TaskCard({
 						{daysSinceCreated > 0 && <Text dimColor>{ageDisplay}</Text>}
 					</Box>
 
-					{task.tags.length > 0 && (
+					{badgeTags.length > 0 && (
 						<Box marginTop={1} justifyContent="center" gap={1}>
-							{task.tags.map((tag) => (
-								<Text key={tag} color="cyan">
+							{badgeTags.map((tag) => (
+								<Text key={tag} color={tagColor(tag)}>
 									[{tag}]
 								</Text>
 							))}
@@ -88,8 +94,9 @@ export function TaskListItem({
 	return (
 		<Box>
 			<Text color={selected ? 'cyan' : undefined} bold={selected}>
-				{prefix} {index + 1}. {task.description}
+				{prefix} {index + 1}.{' '}
 			</Text>
+			<TagText bold={selected}>{task.description}</TagText>
 			{dueDisplay && <Text dimColor> ({dueDisplay})</Text>}
 		</Box>
 	)
