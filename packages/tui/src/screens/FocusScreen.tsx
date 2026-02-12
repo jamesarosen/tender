@@ -5,10 +5,12 @@ import type { Database, Task } from '@tender/db'
 import { recordSignal, deleteSignal } from '@tender/domain'
 import { getDegradedResponse, formatResponse } from '@tender/agent'
 import { TaskCard } from '#src/components/TaskCard.js'
+import { Quote } from '#src/components/Quote.js'
 import { ReflectionPrompt as ReflectionPromptComponent } from '#src/components/ReflectionPrompt.js'
 import { useTasks, getTaskStats, type TaskStats } from '#src/hooks/useTasks.js'
 import { useReflection } from '#src/hooks/useReflection.js'
 import { useApp } from '#src/context/AppContext.js'
+import { getRandomQuote } from '#src/data/quotes.js'
 
 interface ReflectingTask {
 	task: Task
@@ -33,6 +35,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		setUndoReflectionSignal,
 	} = useApp()
 	const { activePrompt, showReflection, dismissReflection } = useReflection()
+	const [quote] = useState(getRandomQuote)
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
 	// Track the task we're reflecting on (keeps showing it until reflection is done)
@@ -299,10 +302,13 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	// Show "no tasks" only if there's no current task AND we're not reflecting
 	if (!currentTask && !reflectingTask) {
 		return (
-			<Box flexDirection="column" alignItems="center" paddingY={2}>
-				<Text>No tasks yet.</Text>
-				<Box marginTop={1}>
-					<Text dimColor>Press 'a' to add your first task.</Text>
+			<Box flexDirection="column" paddingY={1}>
+				<Quote quote={quote} />
+				<Box flexDirection="column" alignItems="center" marginTop={2}>
+					<Text>No tasks yet.</Text>
+					<Box marginTop={1}>
+						<Text dimColor>Press 'a' to add your first task.</Text>
+					</Box>
 				</Box>
 			</Box>
 		)
@@ -319,11 +325,14 @@ export function FocusScreen({ db }: FocusScreenProps) {
 
 	return (
 		<Box flexDirection="column" paddingY={1}>
-			<TaskCard
-				task={displayTask}
-				daysSinceCreated={displayStats?.daysSinceCreated}
-				showDetails={true}
-			/>
+			<Quote quote={quote} />
+			<Box marginTop={1}>
+				<TaskCard
+					task={displayTask}
+					daysSinceCreated={displayStats?.daysSinceCreated}
+					showDetails={true}
+				/>
+			</Box>
 
 			{displayTask.started_at && !reflectingTask && (
 				<Box justifyContent="center" marginTop={1}>

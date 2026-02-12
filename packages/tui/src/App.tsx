@@ -64,12 +64,20 @@ function StatusBarWithAvailability() {
 	const { state } = useApp()
 
 	// Different hints for different screens
-	const keyHints =
-		state.screen === 'day'
-			? '[j/k] navigate [Enter] focus [Esc] back'
-			: state.screen === 'capture'
-				? '[Enter] save [Tab] due date [Esc] cancel'
-				: '[s]kip [c]omplete [d]ay [a]dd [?]'
+	let keyHints: string
+	switch (state.screen) {
+		case 'day':
+			keyHints = '[j/k] navigate | [Enter] focus | [x] delete | [a]dd | [Esc] back'
+			break
+		case 'capture':
+			keyHints = '[Enter] save | [Tab] due date | [Esc] cancel'
+			break
+		case 'focus':
+		case 'first-run':
+		default:
+			keyHints = '[s]kip | [c]omplete | [d]ay | [a]dd | [?]'
+			break
+	}
 
 	return (
 		<StatusBar
@@ -87,7 +95,10 @@ function AppContent({ db }: { db: Kysely<Database> }) {
 	return (
 		<Box flexDirection="column" minHeight={10}>
 			<Box flexGrow={1}>
-				{activeModal ? <ModalLayer /> : <ScreenRouter db={db} />}
+				{activeModal && <ModalLayer />}
+				<Box display={activeModal ? 'none' : 'flex'} flexGrow={1}>
+					<ScreenRouter db={db} />
+				</Box>
 			</Box>
 			<StatusBarWithAvailability />
 		</Box>

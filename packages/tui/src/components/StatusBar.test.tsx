@@ -44,11 +44,12 @@ describe('StatusBar', () => {
 		expect(lastFrame()).not.toContain('AI:')
 	})
 
-	it('shows default key hints', () => {
+	it('shows default key hints with delimiters', () => {
 		const { lastFrame } = render(<StatusBar llmStatus="available" />)
 		expect(lastFrame()).toContain('[s]kip')
 		expect(lastFrame()).toContain('[c]omplete')
 		expect(lastFrame()).toContain('[d]ay')
 		expect(lastFrame()).toContain('[a]dd')
+		expect(lastFrame()).toContain('|')
 	})
 })
