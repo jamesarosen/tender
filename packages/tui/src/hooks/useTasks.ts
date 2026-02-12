@@ -3,7 +3,7 @@ import type { Kysely } from 'kysely'
 import type { Database, Task, ISO8601 } from '@tender/db'
 import { parseTaskRow } from '@tender/db'
 import { dueDateAgeStrategy } from '@tender/agent'
-import { countDeferrals } from '@tender/domain'
+import { countDeferrals, extractTags } from '@tender/domain'
 import { UUID7Generator } from 'uuid7-typed'
 
 export interface UseTasksResult {
@@ -59,7 +59,8 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 					id,
 					template_id: null,
 					description,
-					tags: '[]',
+					// TODO: re-extract tags if task editing is added
+					tags: JSON.stringify(extractTags(description)),
 					preparation_notes: null,
 					due_at: dueAt ?? null,
 					created_at,
