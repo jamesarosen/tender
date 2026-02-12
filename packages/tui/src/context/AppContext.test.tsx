@@ -15,6 +15,15 @@ function TestComponent() {
 }
 
 describe('AppContext', () => {
+	it('defaults to day screen', () => {
+		const { lastFrame } = render(
+			<AppProvider>
+				<TestComponent />
+			</AppProvider>
+		)
+		expect(lastFrame()).toContain('screen:day')
+	})
+
 	it('provides initial screen state', () => {
 		const { lastFrame } = render(
 			<AppProvider initialScreen="focus">

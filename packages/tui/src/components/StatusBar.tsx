@@ -42,7 +42,7 @@ function getStatusDisplay(
 	}
 }
 
-const DEFAULT_HINTS = '[s]kip [c]omplete [d]ay [a]dd [?]'
+const DEFAULT_HINTS = '[s]kip | [c]omplete | [d]ay | [a]dd | [?]'
 
 export function StatusBar({
 	llmStatus,

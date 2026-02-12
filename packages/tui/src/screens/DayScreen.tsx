@@ -236,12 +236,6 @@ export function DayScreen({ db }: DayScreenProps) {
 					<Text color="gray">{message}</Text>
 				</Box>
 			)}
-
-			<Box marginTop={1}>
-				<Text dimColor>
-					j/k: navigate • Enter: focus • a: add • x: delete • Esc: back
-				</Text>
-			</Box>
 		</Box>
 	)
 }
