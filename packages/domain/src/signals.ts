@@ -145,18 +145,6 @@ export async function getSignalsByKind(
  * @param taskId - The task ID to check
  * @returns Number of deferred signals
  */
-/**
- * Deletes a signal by ID.
- *
- * Used for undo operations (e.g., undoing a task completion).
- */
-export async function deleteSignal(
-	db: Kysely<Database>,
-	signalId: string
-): Promise<void> {
-	await db.deleteFrom('signals').where('id', '=', signalId).execute()
-}
-
 export async function countDeferrals(
 	db: Kysely<Database>,
 	taskId: string
@@ -169,4 +157,16 @@ export async function countDeferrals(
 		.executeTakeFirstOrThrow()
 
 	return Number(result.count)
+}
+
+/**
+ * Deletes a signal by ID.
+ *
+ * Used for undo operations (e.g., reversing a completion or deletion).
+ */
+export async function deleteSignal(
+	db: Kysely<Database>,
+	signalId: string
+): Promise<void> {
+	await db.deleteFrom('signals').where('id', '=', signalId).execute()
 }

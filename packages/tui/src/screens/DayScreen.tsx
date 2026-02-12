@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Box, Text, useInput } from 'ink'
 import type { Kysely } from 'kysely'
 import type { Database, Task } from '@tender/db'
+import { recordSignal, deleteSignal } from '@tender/domain'
 import { getDegradedResponse } from '@tender/agent'
 import { TaskListItem } from '#src/components/TaskCard.js'
 import { useTasks } from '#src/hooks/useTasks.js'
@@ -39,13 +40,25 @@ function groupTasks(tasks: Task[]): { today: Task[]; later: Task[] } {
 }
 
 export function DayScreen({ db }: DayScreenProps) {
-	const { tasks, loading, deleteTask } = useTasks(db)
-	const { navigate, selectTask } = useApp()
+	const { tasks, loading, deleteTask, undeleteTask } = useTasks(db)
+	const { navigate, selectTask, state, startUndo, tickUndo, clearUndo } =
+		useApp()
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [message, setMessage] = useState<string | null>(null)
 
 	const visibleTasks = tasks.slice(0, MAX_VISIBLE_TASKS)
 	const { today, later } = groupTasks(tasks)
+
+	// Ref to access undo action in callbacks without stale closures
+	const undoActionRef = useRef(state.undoAction)
+	useEffect(() => {
+		undoActionRef.current = state.undoAction
+	}, [state.undoAction])
+
+	const showMessage = useCallback((msg: string) => {
+		setMessage(msg)
+		setTimeout(() => setMessage(null), 2000)
+	}, [])
 
 	const handleSelect = useCallback(() => {
 		const task = visibleTasks[selectedIndex]
@@ -57,16 +70,78 @@ export function DayScreen({ db }: DayScreenProps) {
 
 	const handleDelete = useCallback(async () => {
 		const task = visibleTasks[selectedIndex]
-		if (task) {
+		if (!task) return
+
+		// Finalize any pending undo before starting a new one
+		if (undoActionRef.current) {
+			clearUndo()
+		}
+
+		try {
 			await deleteTask(task.id)
-			setMessage(getDegradedResponse('taskDeleted'))
-			setTimeout(() => setMessage(null), 2000)
+			const signal = await recordSignal(db, {
+				taskId: task.id,
+				kind: 'deleted',
+			})
+			startUndo(
+				{
+					taskId: task.id,
+					signalId: signal.id,
+					reflectionSignalId: null,
+				},
+				5
+			)
+			showMessage(getDegradedResponse('taskDeleted'))
 			// Adjust selection if we deleted the last item
 			if (selectedIndex >= visibleTasks.length - 1 && selectedIndex > 0) {
 				setSelectedIndex(selectedIndex - 1)
 			}
+		} catch {
+			showMessage('Failed to delete task')
 		}
-	}, [visibleTasks, selectedIndex, deleteTask])
+	}, [
+		visibleTasks,
+		selectedIndex,
+		deleteTask,
+		db,
+		startUndo,
+		clearUndo,
+		showMessage,
+	])
+
+	const handleUndo = useCallback(async () => {
+		const undo = undoActionRef.current
+		if (!undo) return
+
+		try {
+			await undeleteTask(undo.taskId)
+			await deleteSignal(db, undo.signalId)
+			showMessage('Restored')
+		} catch {
+			showMessage('Failed to undo')
+		} finally {
+			clearUndo()
+		}
+	}, [undeleteTask, db, clearUndo, showMessage])
+
+	// Undo key handler
+	useInput((input) => {
+		if (!state.undoAction) return
+		if (input === 'u') {
+			handleUndo()
+		}
+	})
+
+	// Countdown interval: ticks while undo is active
+	useEffect(() => {
+		if (!state.undoAction || state.undoSecondsLeft <= 0) return
+
+		const interval = setInterval(() => {
+			tickUndo()
+		}, 1000)
+
+		return () => clearInterval(interval)
+	}, [state.undoAction, state.undoSecondsLeft, tickUndo])
 
 	useInput((input, key) => {
 		if (key.escape) {

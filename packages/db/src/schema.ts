@@ -90,6 +90,7 @@ export const reflectionPayloadSchema = z.object({
 export const signalKindSchema = z.enum([
 	'deferred',
 	'completed',
+	'deleted',
 	'surfaced',
 	'reflection',
 	'session_started',
