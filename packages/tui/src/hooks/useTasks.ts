@@ -15,6 +15,7 @@ export interface UseTasksResult {
 	uncompleteTask: (taskId: string) => Promise<void>
 	startTask: (taskId: string) => Promise<void>
 	deleteTask: (taskId: string) => Promise<void>
+	undeleteTask: (taskId: string) => Promise<void>
 }
 
 function toISO8601(date: Date): ISO8601 {
@@ -139,6 +140,18 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		[db, refresh]
 	)
 
+	const undeleteTask = useCallback(
+		async (taskId: string) => {
+			await db
+				.updateTable('tasks')
+				.set({ deleted_at: null })
+				.where('id', '=', taskId)
+				.execute()
+			await refresh()
+		},
+		[db, refresh]
+	)
+
 	return {
 		tasks,
 		loading,
@@ -148,6 +161,7 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		uncompleteTask,
 		startTask,
 		deleteTask,
+		undeleteTask,
 	}
 }
 
