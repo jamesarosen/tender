@@ -175,9 +175,7 @@ export function DayScreen({ db }: DayScreenProps) {
 	}, [state.undoAction, state.undoSecondsLeft, tickUndo])
 
 	useInput((input, key) => {
-		if (key.escape) {
-			navigate('focus')
-		} else if (key.return) {
+		if (key.return) {
 			handleSelect()
 		} else if (input === 'j' || key.downArrow) {
 			setSelectedIndex((i) => Math.min(i + 1, visibleTasks.length - 1))

@@ -58,7 +58,7 @@ Dr. Tim Pychyl of Carleton University defines procrastination as "a mechanism of
 
 ### Core UX Principles
 
-1. **Single focus suggestion** with day-level context
+1. **Curated short list** — a few tasks for today; pick one to focus on
 2. **Warm coach personality** — supportive, curious, non-judgmental
 3. **Quick capture** — adding tasks must be frictionless
 4. **Low maintenance** — system should largely manage itself
@@ -135,7 +135,7 @@ What feels "emotionally vulnerable" is personal. Writing thank-you notes might b
 
 ## Design Principles
 
-1. **Less is more** — Aggressive filtering. Default view: 1 suggested task. Expand for day context.
+1. **Less is more** — Aggressive filtering. Default view: a curated short list for today.
 
 2. **Emotions are data** — Track feelings subtly. Use this to understand friction, not to judge.
 
