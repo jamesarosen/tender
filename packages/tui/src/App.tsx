@@ -3,11 +3,17 @@ import type { Kysely } from 'kysely'
 import type { Database } from '@tender/db'
 import type { LlmAvailabilityInput } from '@tender/agent'
 import { DatabaseProvider } from './context/DatabaseContext.js'
-import { AppProvider, useApp } from './context/AppContext.js'
+import {
+	AppProvider,
+	useApp,
+	type Screen,
+	type ModalType,
+} from './context/AppContext.js'
 import {
 	AvailabilityProvider,
 	useAvailability,
 } from './context/AvailabilityContext.js'
+import { useTerminalTitle } from './hooks/useTerminalTitle.js'
 import { StatusBar } from './components/StatusBar.js'
 import { HelpOverlay } from './components/HelpOverlay.js'
 import { FocusScreen } from './screens/FocusScreen.js'
@@ -89,8 +95,24 @@ function StatusBarWithAvailability() {
 	)
 }
 
+function terminalTitle(screen: Screen, modal: ModalType | null): string {
+	if (modal === 'help') return 'Tender / Keyboard Shortcuts'
+	switch (screen) {
+		case 'day':
+			return 'Tender / Day'
+		case 'capture':
+			return 'Tender / New Task'
+		case 'first-run':
+			return 'Tender / Welcome'
+		case 'focus':
+		default:
+			return 'Tender'
+	}
+}
+
 function AppContent({ db }: { db: Kysely<Database> }) {
-	const { activeModal } = useApp()
+	const { activeModal, state } = useApp()
+	useTerminalTitle(terminalTitle(state.screen, activeModal))
 
 	return (
 		<Box flexDirection="column" minHeight={10}>
