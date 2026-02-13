@@ -18,6 +18,23 @@ export const DEBUG_DEFAULTS = {
 } as const
 
 /**
+ * Detect whether the terminal likely supports Unicode rendering.
+ * Checks for TTY + a UTF-8 locale. Returns false for bare Linux
+ * consoles (TERM=linux) which have limited Unicode glyph support.
+ */
+export function detectUnicodeSupport(): boolean {
+	if (!process.stdout.isTTY) return false
+	if (process.env.TERM === 'linux') return false
+	const locale = (
+		process.env.LC_ALL ??
+		process.env.LC_CTYPE ??
+		process.env.LANG ??
+		''
+	).toLowerCase()
+	return locale.includes('utf-8') || locale.includes('utf8')
+}
+
+/**
  * Agent configuration for LLM availability and retry behavior.
  * This schema validates input without applying defaults.
  */
@@ -39,6 +56,17 @@ export const agentConfigSchema = z.object({
 export type AgentConfig = z.infer<typeof agentConfigSchema>
 
 /**
+ * UI configuration.
+ * This schema validates input without applying defaults.
+ */
+export const uiConfigSchema = z.object({
+	/** Use Unicode symbols in the UI (e.g. ⏎ instead of "ret"). Auto-detected from terminal when omitted. */
+	unicode: z.boolean().optional(),
+})
+
+export type UiConfig = z.infer<typeof uiConfigSchema>
+
+/**
  * Debug output configuration.
  * This schema validates input without applying defaults.
  */
@@ -57,6 +85,7 @@ export type DebugConfig = z.infer<typeof debugConfigSchema>
  */
 export const tenderConfigSchema = z.object({
 	agent: agentConfigSchema.optional(),
+	ui: uiConfigSchema.optional(),
 	debug: debugConfigSchema.optional(),
 })
 
@@ -74,6 +103,10 @@ export interface ResolvedTenderConfig {
 		maxBackoffMs: number
 		rateLimitDefaultMs: number
 	}
+	ui: {
+		/** User's explicit preference, or undefined if not set. Each frontend supplies its own default. */
+		unicode: boolean | undefined
+	}
 	debug: {
 		output: 'stderr' | 'file'
 		filePath: string | undefined
@@ -85,6 +118,7 @@ export interface ResolvedTenderConfig {
  */
 export function resolveConfig(config: TenderConfig): ResolvedTenderConfig {
 	const agent = config.agent ?? {}
+	const ui = config.ui ?? {}
 	const debug = config.debug ?? {}
 
 	return {
@@ -96,6 +130,9 @@ export function resolveConfig(config: TenderConfig): ResolvedTenderConfig {
 			maxBackoffMs: agent.maxBackoffMs ?? AGENT_DEFAULTS.maxBackoffMs,
 			rateLimitDefaultMs:
 				agent.rateLimitDefaultMs ?? AGENT_DEFAULTS.rateLimitDefaultMs,
+		},
+		ui: {
+			unicode: ui.unicode,
 		},
 		debug: {
 			output: debug.output ?? DEBUG_DEFAULTS.output,

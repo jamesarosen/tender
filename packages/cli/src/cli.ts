@@ -5,6 +5,7 @@ import React from 'react'
 import {
 	loadResolvedConfig,
 	getDatabasePath,
+	detectUnicodeSupport,
 	type ResolvedTenderConfig,
 } from '@tender/config'
 import { createDatabase, type DatabaseConnection } from '@tender/db'
@@ -60,6 +61,7 @@ export async function run(): Promise<void> {
 			db: conn.db,
 			availabilityInput,
 			isFirstRun,
+			unicode: config.ui.unicode ?? detectUnicodeSupport(),
 		})
 	)
 

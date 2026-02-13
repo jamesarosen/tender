@@ -19,13 +19,16 @@ export {
 export {
 	tenderConfigSchema,
 	agentConfigSchema,
+	uiConfigSchema,
 	debugConfigSchema,
 	resolveConfig,
+	detectUnicodeSupport,
 	AGENT_DEFAULTS,
 	DEBUG_DEFAULTS,
 	type LlmProvider,
 	type TenderConfig,
 	type AgentConfig,
+	type UiConfig,
 	type DebugConfig,
 	type ResolvedTenderConfig,
 } from './types.js'

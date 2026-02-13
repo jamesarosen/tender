@@ -13,6 +13,8 @@ import {
 	AvailabilityProvider,
 	useAvailability,
 } from './context/AvailabilityContext.js'
+import { UiProvider, useUi } from './context/UiContext.js'
+import { getKeyLabels } from './keyLabels.js'
 import { useTerminalTitle } from './hooks/useTerminalTitle.js'
 import { StatusBar } from './components/StatusBar.js'
 import { HelpOverlay } from './components/HelpOverlay.js'
@@ -25,6 +27,7 @@ export interface AppProps {
 	db: Kysely<Database>
 	availabilityInput: LlmAvailabilityInput
 	isFirstRun?: boolean
+	unicode?: boolean
 }
 
 function ScreenRouter({ db }: { db: Kysely<Database> }) {
@@ -68,15 +71,17 @@ function getUndoHint(
 function StatusBarWithAvailability() {
 	const { status, context } = useAvailability()
 	const { state } = useApp()
+	const { unicode } = useUi()
+	const keys = getKeyLabels(unicode)
 
 	// Different hints for different screens
 	let keyHints: string
 	switch (state.screen) {
 		case 'day':
-			keyHints = '[j/k] navigate | [Enter] focus | [c]omplete | [x] delete | [a]dd'
+			keyHints = `[j/k] navigate | [${keys.enter}] focus | [c]omplete | [x] delete | [a]dd`
 			break
 		case 'capture':
-			keyHints = '[Enter] save | [Tab] due date | [Esc] cancel'
+			keyHints = `[${keys.enter}] save | [${keys.tab}] due date | [${keys.esc}] cancel`
 			break
 		case 'focus':
 		case 'first-run':
@@ -127,14 +132,21 @@ function AppContent({ db }: { db: Kysely<Database> }) {
 	)
 }
 
-export function App({ db, availabilityInput, isFirstRun = false }: AppProps) {
+export function App({
+	db,
+	availabilityInput,
+	isFirstRun = false,
+	unicode = false, // safe fallback; production callers pass config.ui.unicode
+}: AppProps) {
 	return (
 		<DatabaseProvider db={db}>
-			<AvailabilityProvider input={availabilityInput}>
-				<AppProvider isFirstRun={isFirstRun}>
-					<AppContent db={db} />
-				</AppProvider>
-			</AvailabilityProvider>
+			<UiProvider unicode={unicode}>
+				<AvailabilityProvider input={availabilityInput}>
+					<AppProvider isFirstRun={isFirstRun}>
+						<AppContent db={db} />
+					</AppProvider>
+				</AvailabilityProvider>
+			</UiProvider>
 		</DatabaseProvider>
 	)
 }
