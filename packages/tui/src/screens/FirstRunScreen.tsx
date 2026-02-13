@@ -6,6 +6,7 @@ import { Field, Label } from '#src/components/Field.js'
 import { TextInput } from '#src/components/TextInput.js'
 import { useTasks } from '#src/hooks/useTasks.js'
 import { useApp } from '#src/context/AppContext.js'
+import { useSymbols } from '#src/symbols.js'
 
 export interface FirstRunScreenProps {
 	db: Kysely<Database>
@@ -14,6 +15,7 @@ export interface FirstRunScreenProps {
 export function FirstRunScreen({ db }: FirstRunScreenProps) {
 	const { createTask } = useTasks(db)
 	const { navigate, setFirstRun } = useApp()
+	const sym = useSymbols()
 	const [value, setValue] = useState('')
 	const [step, setStep] = useState<'intro' | 'input'>('intro')
 
@@ -51,7 +53,7 @@ export function FirstRunScreen({ db }: FirstRunScreenProps) {
 				</Box>
 
 				<Box marginTop={1}>
-					<Text dimColor>Press Enter to continue...</Text>
+					<Text dimColor>Press Enter to continue{sym.ellipsis}</Text>
 				</Box>
 			</Box>
 		)

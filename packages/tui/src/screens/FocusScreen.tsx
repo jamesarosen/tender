@@ -10,6 +10,7 @@ import { ReflectionPrompt as ReflectionPromptComponent } from '#src/components/R
 import { useTasks, getTaskStats, type TaskStats } from '#src/hooks/useTasks.js'
 import { useReflection } from '#src/hooks/useReflection.js'
 import { useApp } from '#src/context/AppContext.js'
+import { useSymbols } from '#src/symbols.js'
 import { getRandomQuote } from '#src/data/quotes.js'
 
 interface ReflectingTask {
@@ -35,6 +36,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		setUndoReflectionSignal,
 	} = useApp()
 	const { activePrompt, showReflection, dismissReflection } = useReflection()
+	const sym = useSymbols()
 	const [quote] = useState(getRandomQuote)
 	const [message, setMessage] = useState<string | null>(null)
 	const [taskStats, setTaskStats] = useState<TaskStats | null>(null)
@@ -295,7 +297,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	if (loading) {
 		return (
 			<Box flexDirection="column" alignItems="center" paddingY={2}>
-				<Text dimColor>Loading...</Text>
+				<Text dimColor>Loading{sym.ellipsis}</Text>
 			</Box>
 		)
 	}
@@ -319,7 +321,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	if (!displayTask) {
 		return (
 			<Box flexDirection="column" alignItems="center" paddingY={2}>
-				<Text dimColor>Loading...</Text>
+				<Text dimColor>Loading{sym.ellipsis}</Text>
 			</Box>
 		)
 	}
@@ -337,7 +339,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 
 			{displayTask.started_at && !reflectingTask && (
 				<Box justifyContent="center" marginTop={1}>
-					<Text color="green">In progress...</Text>
+					<Text color="green">In progress{sym.ellipsis}</Text>
 				</Box>
 			)}
 
