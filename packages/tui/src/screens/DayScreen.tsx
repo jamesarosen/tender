@@ -7,6 +7,7 @@ import { getDegradedResponse } from '@tender/agent'
 import { TaskListItem } from '#src/components/TaskCard.js'
 import { useTasks } from '#src/hooks/useTasks.js'
 import { useApp } from '#src/context/AppContext.js'
+import { useSymbols } from '#src/symbols.js'
 
 export interface DayScreenProps {
 	db: Kysely<Database>
@@ -50,6 +51,7 @@ export function DayScreen({ db }: DayScreenProps) {
 	} = useTasks(db)
 	const { navigate, selectTask, state, startUndo, tickUndo, clearUndo } =
 		useApp()
+	const sym = useSymbols()
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [message, setMessage] = useState<string | null>(null)
 
@@ -193,7 +195,7 @@ export function DayScreen({ db }: DayScreenProps) {
 	if (loading) {
 		return (
 			<Box flexDirection="column" alignItems="center" paddingY={2}>
-				<Text dimColor>Loading...</Text>
+				<Text dimColor>Loading{sym.ellipsis}</Text>
 			</Box>
 		)
 	}

@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink'
 import type { LlmAvailabilityStateValue } from '@tender/agent'
 import { colors } from '#src/theme.js'
+import { useSymbols } from '#src/symbols.js'
 
 export interface StatusBarProps {
 	llmStatus: LlmAvailabilityStateValue
@@ -17,6 +18,7 @@ interface StatusDisplay {
 
 function getStatusDisplay(
 	status: LlmAvailabilityStateValue,
+	ellipsis: string,
 	retryAfterMs?: number | null
 ): StatusDisplay {
 	switch (status) {
@@ -24,7 +26,7 @@ function getStatusDisplay(
 			return { text: '', color: undefined, show: false }
 		case 'checking':
 		case 'initializing':
-			return { text: 'AI: ...', color: 'gray', show: true }
+			return { text: `AI: ${ellipsis}`, color: 'gray', show: true }
 		case 'available':
 			return { text: 'AI: Online', color: 'green', show: true }
 		case 'keyMissing':
@@ -50,7 +52,8 @@ export function StatusBar({
 	keyHints = DEFAULT_HINTS,
 	undoHint,
 }: StatusBarProps) {
-	const status = getStatusDisplay(llmStatus, retryAfterMs)
+	const sym = useSymbols()
+	const status = getStatusDisplay(llmStatus, sym.ellipsis, retryAfterMs)
 
 	return (
 		<Box

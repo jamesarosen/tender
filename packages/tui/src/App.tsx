@@ -13,8 +13,8 @@ import {
 	AvailabilityProvider,
 	useAvailability,
 } from './context/AvailabilityContext.js'
-import { UiProvider, useUi } from './context/UiContext.js'
-import { getKeyLabels } from './keyLabels.js'
+import { UiProvider } from './context/UiContext.js'
+import { useSymbols } from './symbols.js'
 import { useTerminalTitle } from './hooks/useTerminalTitle.js'
 import { StatusBar } from './components/StatusBar.js'
 import { HelpOverlay } from './components/HelpOverlay.js'
@@ -71,17 +71,16 @@ function getUndoHint(
 function StatusBarWithAvailability() {
 	const { status, context } = useAvailability()
 	const { state } = useApp()
-	const { unicode } = useUi()
-	const keys = getKeyLabels(unicode)
+	const sym = useSymbols()
 
 	// Different hints for different screens
 	let keyHints: string
 	switch (state.screen) {
 		case 'day':
-			keyHints = `[j/k] navigate | [${keys.enter}] focus | [c]omplete | [x] delete | [a]dd`
+			keyHints = `[j/k] navigate | [${sym.enter}] focus | [c]omplete | [x] delete | [a]dd`
 			break
 		case 'capture':
-			keyHints = `[${keys.enter}] save | [${keys.tab}] due date | [${keys.esc}] cancel`
+			keyHints = `[${sym.enter}] save | [${sym.tab}] due date | [${sym.esc}] cancel`
 			break
 		case 'focus':
 		case 'first-run':

@@ -27,7 +27,7 @@ export {
 	type UiProviderProps,
 	type UiSettings,
 } from './context/UiContext.js'
-export { getKeyLabels, type KeyLabels } from './keyLabels.js'
+export { getSymbols, useSymbols, type Symbols } from './symbols.js'
 
 // Components
 export {
