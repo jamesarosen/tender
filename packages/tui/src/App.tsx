@@ -67,7 +67,8 @@ function StatusBarWithAvailability() {
 	let keyHints: string
 	switch (state.screen) {
 		case 'day':
-			keyHints = '[j/k] navigate | [Enter] focus | [x] delete | [a]dd | [Esc] back'
+			keyHints =
+				'[j/k] navigate | [Enter] focus | [c]omplete | [x] delete | [a]dd | [Esc] back'
 			break
 		case 'capture':
 			keyHints = '[Enter] save | [Tab] due date | [Esc] cancel'

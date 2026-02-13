@@ -95,6 +95,7 @@ export function FocusScreen({ db }: FocusScreenProps) {
 				taskId: currentTask.id,
 				signalId: signal.id,
 				reflectionSignalId: null,
+				kind: 'complete',
 			},
 			shouldReflect ? 0 : 5
 		)
