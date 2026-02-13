@@ -7,6 +7,7 @@ export interface UndoAction {
 	taskId: string
 	signalId: string
 	reflectionSignalId: string | null
+	kind: 'complete' | 'delete'
 }
 
 export interface AppState {

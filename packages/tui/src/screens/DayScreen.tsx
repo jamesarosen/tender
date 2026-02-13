@@ -40,7 +40,14 @@ function groupTasks(tasks: Task[]): { today: Task[]; later: Task[] } {
 }
 
 export function DayScreen({ db }: DayScreenProps) {
-	const { tasks, loading, deleteTask, undeleteTask } = useTasks(db)
+	const {
+		tasks,
+		loading,
+		deleteTask,
+		undeleteTask,
+		completeTask,
+		uncompleteTask,
+	} = useTasks(db)
 	const { navigate, selectTask, state, startUndo, tickUndo, clearUndo } =
 		useApp()
 	const [selectedIndex, setSelectedIndex] = useState(0)
@@ -68,61 +75,85 @@ export function DayScreen({ db }: DayScreenProps) {
 		}
 	}, [visibleTasks, selectedIndex, selectTask, navigate])
 
-	const handleDelete = useCallback(async () => {
-		const task = visibleTasks[selectedIndex]
-		if (!task) return
+	const handleTaskAction = useCallback(
+		async (
+			perform: (taskId: string) => Promise<void>,
+			kind: 'delete' | 'complete',
+			signalKind: 'deleted' | 'completed',
+			messageKey: string
+		) => {
+			const task = visibleTasks[selectedIndex]
+			if (!task) return
 
-		// Finalize any pending undo before starting a new one
-		if (undoActionRef.current) {
-			clearUndo()
-		}
-
-		try {
-			await deleteTask(task.id)
-			const signal = await recordSignal(db, {
-				taskId: task.id,
-				kind: 'deleted',
-			})
-			startUndo(
-				{
-					taskId: task.id,
-					signalId: signal.id,
-					reflectionSignalId: null,
-				},
-				5
-			)
-			showMessage(getDegradedResponse('taskDeleted'))
-			// Adjust selection if we deleted the last item
-			if (selectedIndex >= visibleTasks.length - 1 && selectedIndex > 0) {
-				setSelectedIndex(selectedIndex - 1)
+			// Finalize any pending undo before starting a new one
+			if (undoActionRef.current) {
+				clearUndo()
 			}
-		} catch {
-			showMessage('Failed to delete task')
-		}
-	}, [
-		visibleTasks,
-		selectedIndex,
-		deleteTask,
-		db,
-		startUndo,
-		clearUndo,
-		showMessage,
-	])
+
+			try {
+				await perform(task.id)
+				const signal = await recordSignal(db, {
+					taskId: task.id,
+					kind: signalKind,
+				})
+				startUndo(
+					{
+						taskId: task.id,
+						signalId: signal.id,
+						reflectionSignalId: null,
+						kind,
+					},
+					5
+				)
+				showMessage(getDegradedResponse(messageKey))
+				// Adjust selection if we removed the last item
+				if (selectedIndex >= visibleTasks.length - 1 && selectedIndex > 0) {
+					setSelectedIndex(selectedIndex - 1)
+				}
+			} catch {
+				showMessage(`Failed to ${kind} task`)
+			}
+		},
+		[visibleTasks, selectedIndex, db, startUndo, clearUndo, showMessage]
+	)
+
+	const handleDelete = useCallback(
+		() => handleTaskAction(deleteTask, 'delete', 'deleted', 'taskDeleted'),
+		[handleTaskAction, deleteTask]
+	)
+
+	const handleComplete = useCallback(
+		() =>
+			handleTaskAction(
+				completeTask,
+				'complete',
+				'completed',
+				'completionAcknowledged'
+			),
+		[handleTaskAction, completeTask]
+	)
 
 	const handleUndo = useCallback(async () => {
 		const undo = undoActionRef.current
 		if (!undo) return
 
 		try {
-			await undeleteTask(undo.taskId)
+			if (undo.kind === 'delete') {
+				await undeleteTask(undo.taskId)
+			} else {
+				await uncompleteTask(undo.taskId)
+			}
 			await deleteSignal(db, undo.signalId)
+			if (undo.reflectionSignalId) {
+				await deleteSignal(db, undo.reflectionSignalId)
+			}
 			showMessage('Restored')
 		} catch {
 			showMessage('Failed to undo')
 		} finally {
 			clearUndo()
 		}
-	}, [undeleteTask, db, clearUndo, showMessage])
+	}, [undeleteTask, uncompleteTask, db, clearUndo, showMessage])
 
 	// Undo key handler
 	useInput((input) => {
@@ -152,6 +183,8 @@ export function DayScreen({ db }: DayScreenProps) {
 			setSelectedIndex((i) => Math.min(i + 1, visibleTasks.length - 1))
 		} else if (input === 'k' || key.upArrow) {
 			setSelectedIndex((i) => Math.max(i - 1, 0))
+		} else if (input === 'c') {
+			handleComplete()
 		} else if (input === 'x') {
 			handleDelete()
 		} else if (input === 'a') {
