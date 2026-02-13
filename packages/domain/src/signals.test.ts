@@ -3,6 +3,7 @@
  */
 
 import type { Client } from '@libsql/client'
+import type { ISO8601 } from '@tender/db'
 import { describe, expect, test } from '@tender/db/test-setup'
 import { UUID7Generator } from 'uuid7-typed'
 import {
@@ -10,6 +11,7 @@ import {
 	getSignalsForTask,
 	getSignalsByKind,
 	countDeferrals,
+	getLatestDeferralTimestamps,
 } from './signals.js'
 
 // Helper to create a task for testing with a valid UUIDv7
@@ -210,5 +212,124 @@ describe('countDeferrals', () => {
 		const count = await countDeferrals(db, taskId1)
 
 		expect(count).toBe(1)
+	})
+})
+
+describe('getLatestDeferralTimestamps', () => {
+	test('returns empty map for empty task list', async ({ db }) => {
+		const result = await getLatestDeferralTimestamps(
+			db,
+			[],
+			'2025-01-01T00:00:00.000Z' as ISO8601
+		)
+
+		expect(result.size).toBe(0)
+	})
+
+	test('returns empty map when no deferrals since cutoff', async ({
+		client,
+		db,
+	}) => {
+		const taskId = await createTestTask(client)
+
+		await recordSignal(
+			db,
+			{ taskId, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-01T08:00:00Z') }
+		)
+
+		const result = await getLatestDeferralTimestamps(
+			db,
+			[taskId],
+			'2025-01-02T00:00:00.000Z' as ISO8601
+		)
+
+		expect(result.size).toBe(0)
+	})
+
+	test('returns latest deferral per task since cutoff', async ({
+		client,
+		db,
+	}) => {
+		const taskId1 = await createTestTask(client)
+		const taskId2 = await createTestTask(client)
+
+		// taskId1: deferred twice today
+		await recordSignal(
+			db,
+			{ taskId: taskId1, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-15T09:00:00Z') }
+		)
+		await recordSignal(
+			db,
+			{ taskId: taskId1, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-15T11:00:00Z') }
+		)
+
+		// taskId2: deferred once today
+		await recordSignal(
+			db,
+			{ taskId: taskId2, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-15T10:00:00Z') }
+		)
+
+		const result = await getLatestDeferralTimestamps(
+			db,
+			[taskId1, taskId2],
+			'2025-01-15T00:00:00.000Z' as ISO8601
+		)
+
+		expect(result.size).toBe(2)
+		expect(result.get(taskId1)).toBe('2025-01-15T11:00:00.000Z')
+		expect(result.get(taskId2)).toBe('2025-01-15T10:00:00.000Z')
+	})
+
+	test('ignores non-deferred signals', async ({ client, db }) => {
+		const taskId = await createTestTask(client)
+
+		await recordSignal(
+			db,
+			{ taskId, kind: 'completed' },
+			{ timestamp: new Date('2025-01-15T09:00:00Z') }
+		)
+		await recordSignal(
+			db,
+			{ taskId, kind: 'surfaced' },
+			{ timestamp: new Date('2025-01-15T10:00:00Z') }
+		)
+
+		const result = await getLatestDeferralTimestamps(
+			db,
+			[taskId],
+			'2025-01-15T00:00:00.000Z' as ISO8601
+		)
+
+		expect(result.size).toBe(0)
+	})
+
+	test('only includes tasks from the provided list', async ({ client, db }) => {
+		const taskId1 = await createTestTask(client)
+		const taskId2 = await createTestTask(client)
+
+		await recordSignal(
+			db,
+			{ taskId: taskId1, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-15T09:00:00Z') }
+		)
+		await recordSignal(
+			db,
+			{ taskId: taskId2, kind: 'deferred' },
+			{ timestamp: new Date('2025-01-15T10:00:00Z') }
+		)
+
+		const result = await getLatestDeferralTimestamps(
+			db,
+			[taskId1],
+			'2025-01-15T00:00:00.000Z' as ISO8601
+		)
+
+		expect(result.size).toBe(1)
+		expect(result.has(taskId1)).toBe(true)
+		expect(result.has(taskId2)).toBe(false)
 	})
 })

@@ -160,6 +160,40 @@ export async function countDeferrals(
 }
 
 /**
+ * Returns the most recent deferral timestamp for each of the given tasks
+ * that has been deferred on or after `since`.
+ *
+ * Used to push recently-skipped tasks down in the day view.
+ *
+ * @param db - Kysely database instance
+ * @param taskIds - Task IDs to check for deferrals
+ * @param since - Only consider deferrals on or after this timestamp
+ * @returns Map from task ID to its latest deferral timestamp
+ */
+export async function getLatestDeferralTimestamps(
+	db: Kysely<Database>,
+	taskIds: string[],
+	since: ISO8601
+): Promise<Map<string, ISO8601>> {
+	if (taskIds.length === 0) return new Map()
+
+	const rows = await db
+		.selectFrom('signals')
+		.select(['task_id', (eb) => eb.fn.max('timestamp').as('latest')])
+		.where('task_id', 'in', taskIds)
+		.where('kind', '=', 'deferred')
+		.where('timestamp', '>=', since)
+		.groupBy('task_id')
+		.execute()
+
+	const result = new Map<string, ISO8601>()
+	for (const row of rows) {
+		result.set(row.task_id, row.latest as ISO8601)
+	}
+	return result
+}
+
+/**
  * Deletes a signal by ID.
  *
  * Used for undo operations (e.g., reversing a completion or deletion).

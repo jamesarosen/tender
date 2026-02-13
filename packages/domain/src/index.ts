@@ -15,6 +15,7 @@ export {
 	getSignalsForTask,
 	getSignalsByKind,
 	countDeferrals,
+	getLatestDeferralTimestamps,
 	type RecordSignalInput,
 	type RecordSignalOptions,
 } from './signals.js'
