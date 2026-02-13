@@ -18,6 +18,8 @@
   Recovery)
 - Seed data generators (`@tender/fixtures`) for QA, demos, automated tests
 - Profile system (`--profile qa`) combining config + DB path + seed data
+- FocusScreen terminal title: use AI to extract an abbreviated task title
+  (e.g. "Tender / Fix login bug")
 
 ---
 
