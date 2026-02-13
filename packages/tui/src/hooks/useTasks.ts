@@ -3,7 +3,11 @@ import type { Kysely } from 'kysely'
 import type { Database, Task, ISO8601 } from '@tender/db'
 import { parseTaskRow } from '@tender/db'
 import { dueDateAgeStrategy } from '@tender/agent'
-import { countDeferrals, extractTags } from '@tender/domain'
+import {
+	countDeferrals,
+	extractTags,
+	getLatestDeferralTimestamps,
+} from '@tender/domain'
 import { UUID7Generator } from 'uuid7-typed'
 
 export interface UseTasksResult {
@@ -42,7 +46,31 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		setLoading(true)
 		const result = await getActiveTasks(db)
 		const ranked = dueDateAgeStrategy.rank(result)
-		setTasks(ranked)
+
+		// Push tasks deferred today to the bottom, most recently skipped last.
+		// Uses local midnight so "today" matches the user's calendar day.
+		let deferrals = new Map<string, ISO8601>()
+		try {
+			const startOfToday = new Date()
+			startOfToday.setHours(0, 0, 0, 0)
+			const since = toISO8601(startOfToday)
+			const taskIds = ranked.map((t) => t.id)
+			deferrals = await getLatestDeferralTimestamps(db, taskIds, since)
+		} catch (error) {
+			// Fall back to base ranking if deferral query fails
+			console.error('Failed to load deferral timestamps:', error)
+		}
+
+		const notDeferred = ranked.filter((t) => !deferrals.has(t.id))
+		const deferred = ranked
+			.filter((t) => deferrals.has(t.id))
+			.sort((a, b) => {
+				const aTime = deferrals.get(a.id)!
+				const bTime = deferrals.get(b.id)!
+				return aTime.localeCompare(bTime) || a.id.localeCompare(b.id)
+			})
+
+		setTasks([...notDeferred, ...deferred])
 		setLoading(false)
 	}, [db])
 

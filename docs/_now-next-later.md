@@ -20,6 +20,10 @@
 - Profile system (`--profile qa`) combining config + DB path + seed data
 - FocusScreen terminal title: use AI to extract an abbreviated task title
   (e.g. "Tender / Fix login bug")
+- Extract deferral reranking logic from useTasks hook into a pure function in
+  the agent or domain layer for testability and reuse
+- Deduplicate `toISO8601` helper into `@tender/db` (currently duplicated in
+  domain and tui packages)
 
 ---
 
