@@ -21,6 +21,13 @@ export {
 	type AvailabilityProviderProps,
 	type AvailabilityState,
 } from './context/AvailabilityContext.js'
+export {
+	UiProvider,
+	useUi,
+	type UiProviderProps,
+	type UiSettings,
+} from './context/UiContext.js'
+export { getKeyLabels, type KeyLabels } from './keyLabels.js'
 
 // Components
 export {

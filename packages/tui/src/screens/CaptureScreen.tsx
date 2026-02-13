@@ -7,6 +7,8 @@ import { Field, Label } from '#src/components/Field.js'
 import { TextInput } from '#src/components/TextInput.js'
 import { useTasks } from '#src/hooks/useTasks.js'
 import { useApp } from '#src/context/AppContext.js'
+import { useUi } from '#src/context/UiContext.js'
+import { getKeyLabels } from '#src/keyLabels.js'
 
 export interface CaptureScreenProps {
 	db: Kysely<Database>
@@ -17,6 +19,8 @@ type CaptureMode = 'description' | 'due'
 export function CaptureScreen({ db }: CaptureScreenProps) {
 	const { createTask } = useTasks(db)
 	const { navigate } = useApp()
+	const { unicode } = useUi()
+	const keys = getKeyLabels(unicode)
 	const [description, setDescription] = useState('')
 	const [dueDate, setDueDate] = useState('')
 	const [mode, setMode] = useState<CaptureMode>('description')
@@ -124,8 +128,8 @@ export function CaptureScreen({ db }: CaptureScreenProps) {
 			<Box marginTop={1}>
 				<Text dimColor>
 					{mode === 'description'
-						? 'Enter: save • Tab: set due date • Esc: cancel'
-						: 'Enter: save • Esc: cancel'}
+						? `${keys.enter}: save • ${keys.tab}: set due date • ${keys.esc}: cancel`
+						: `${keys.enter}: save • ${keys.esc}: cancel`}
 				</Text>
 			</Box>
 		</Box>

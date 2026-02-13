@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
 	tenderConfigSchema,
 	agentConfigSchema,
+	uiConfigSchema,
 	debugConfigSchema,
 	resolveConfig,
+	detectUnicodeSupport,
 	AGENT_DEFAULTS,
 	DEBUG_DEFAULTS,
 } from './types.js'
@@ -72,6 +74,101 @@ describe('types', () => {
 
 		it('rejects rateLimitDefaultMs below 1000ms', () => {
 			expect(() => agentConfigSchema.parse({ rateLimitDefaultMs: 500 })).toThrow()
+		})
+	})
+
+	describe('uiConfigSchema', () => {
+		it('accepts empty config without applying defaults', () => {
+			const result = uiConfigSchema.parse({})
+			expect(result.unicode).toBeUndefined()
+		})
+
+		it('accepts unicode: true', () => {
+			const result = uiConfigSchema.parse({ unicode: true })
+			expect(result.unicode).toBe(true)
+		})
+
+		it('accepts unicode: false', () => {
+			const result = uiConfigSchema.parse({ unicode: false })
+			expect(result.unicode).toBe(false)
+		})
+
+		it('rejects non-boolean unicode', () => {
+			expect(() => uiConfigSchema.parse({ unicode: 'yes' })).toThrow()
+		})
+	})
+
+	describe('detectUnicodeSupport', () => {
+		const originalEnv = { ...process.env }
+		const originalIsTTY = process.stdout.isTTY
+
+		beforeEach(() => {
+			delete process.env.LC_ALL
+			delete process.env.LC_CTYPE
+			delete process.env.LANG
+			delete process.env.TERM
+		})
+
+		afterEach(() => {
+			process.env = { ...originalEnv }
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: originalIsTTY,
+				writable: true,
+			})
+		})
+
+		it('returns false when not a TTY', () => {
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: false,
+				writable: true,
+			})
+			process.env.LANG = 'en_US.UTF-8'
+			expect(detectUnicodeSupport()).toBe(false)
+		})
+
+		it('returns false for TERM=linux', () => {
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: true,
+				writable: true,
+			})
+			process.env.TERM = 'linux'
+			process.env.LANG = 'en_US.UTF-8'
+			expect(detectUnicodeSupport()).toBe(false)
+		})
+
+		it('returns true for UTF-8 locale on TTY', () => {
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: true,
+				writable: true,
+			})
+			delete process.env.LC_ALL
+			delete process.env.LC_CTYPE
+			process.env.LANG = 'en_US.UTF-8'
+			process.env.TERM = 'xterm-256color'
+			expect(detectUnicodeSupport()).toBe(true)
+		})
+
+		it('returns false when no locale is set', () => {
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: true,
+				writable: true,
+			})
+			delete process.env.LC_ALL
+			delete process.env.LC_CTYPE
+			delete process.env.LANG
+			process.env.TERM = 'xterm-256color'
+			expect(detectUnicodeSupport()).toBe(false)
+		})
+
+		it('checks LC_ALL first', () => {
+			Object.defineProperty(process.stdout, 'isTTY', {
+				value: true,
+				writable: true,
+			})
+			process.env.LC_ALL = 'en_US.UTF-8'
+			process.env.LANG = 'C'
+			process.env.TERM = 'xterm-256color'
+			expect(detectUnicodeSupport()).toBe(true)
 		})
 	})
 
@@ -176,8 +273,19 @@ describe('types', () => {
 			expect(resolved.agent.baseBackoffMs).toBe(10_000)
 			expect(resolved.agent.maxBackoffMs).toBe(600_000)
 			expect(resolved.agent.rateLimitDefaultMs).toBe(60_000)
+			expect(resolved.ui.unicode).toBeUndefined()
 			expect(resolved.debug.output).toBe('stderr')
 			expect(resolved.debug.filePath).toBeUndefined()
+		})
+
+		it('uses explicit unicode: true from config', () => {
+			const resolved = resolveConfig({ ui: { unicode: true } })
+			expect(resolved.ui.unicode).toBe(true)
+		})
+
+		it('uses explicit unicode: false from config', () => {
+			const resolved = resolveConfig({ ui: { unicode: false } })
+			expect(resolved.ui.unicode).toBe(false)
 		})
 
 		it('uses ANTHROPIC_API_KEY env var when apiKey not in config', () => {
