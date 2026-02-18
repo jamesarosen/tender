@@ -5,7 +5,9 @@ import type { Database, Task } from '@tender/db'
 import { recordSignal, deleteSignal } from '@tender/domain'
 import { getDegradedResponse } from '@tender/agent'
 import { TaskListItem } from '#src/components/TaskCard.js'
+import { TextInput } from '#src/components/TextInput.js'
 import { useTasks } from '#src/hooks/useTasks.js'
+import { useReword } from '#src/hooks/useReword.js'
 import { useApp } from '#src/context/AppContext.js'
 import { useSymbols } from '#src/symbols.js'
 
@@ -48,6 +50,7 @@ export function DayScreen({ db }: DayScreenProps) {
 		undeleteTask,
 		completeTask,
 		uncompleteTask,
+		rewordTask,
 	} = useTasks(db)
 	const { navigate, selectTask, state, startUndo, tickUndo, clearUndo } =
 		useApp()
@@ -68,6 +71,16 @@ export function DayScreen({ db }: DayScreenProps) {
 		setMessage(msg)
 		setTimeout(() => setMessage(null), 2000)
 	}, [])
+
+	const selectedTask = visibleTasks[selectedIndex] ?? null
+
+	const { editValue, setEditValue, handleStartEdit, handleSaveEdit, isEditing } =
+		useReword({
+			task: selectedTask,
+			rewordTask,
+			showMessage,
+			undoActionRef,
+		})
 
 	const handleSelect = useCallback(() => {
 		const task = visibleTasks[selectedIndex]
@@ -140,14 +153,18 @@ export function DayScreen({ db }: DayScreenProps) {
 		if (!undo) return
 
 		try {
-			if (undo.kind === 'delete') {
-				await undeleteTask(undo.taskId)
+			if (undo.kind === 'reword') {
+				await rewordTask(undo.taskId, undo.previousDescription)
 			} else {
-				await uncompleteTask(undo.taskId)
-			}
-			await deleteSignal(db, undo.signalId)
-			if (undo.reflectionSignalId) {
-				await deleteSignal(db, undo.reflectionSignalId)
+				if (undo.kind === 'delete') {
+					await undeleteTask(undo.taskId)
+				} else {
+					await uncompleteTask(undo.taskId)
+				}
+				await deleteSignal(db, undo.signalId)
+				if (undo.reflectionSignalId) {
+					await deleteSignal(db, undo.reflectionSignalId)
+				}
 			}
 			showMessage('Restored')
 		} catch {
@@ -155,10 +172,11 @@ export function DayScreen({ db }: DayScreenProps) {
 		} finally {
 			clearUndo()
 		}
-	}, [undeleteTask, uncompleteTask, db, clearUndo, showMessage])
+	}, [rewordTask, undeleteTask, uncompleteTask, db, clearUndo, showMessage])
 
 	// Undo key handler
 	useInput((input) => {
+		if (isEditing) return
 		if (!state.undoAction) return
 		if (input === 'u') {
 			handleUndo()
@@ -177,6 +195,7 @@ export function DayScreen({ db }: DayScreenProps) {
 	}, [state.undoAction, state.undoSecondsLeft, tickUndo])
 
 	useInput((input, key) => {
+		if (isEditing) return
 		if (key.return) {
 			handleSelect()
 		} else if (input === 'j' || key.downArrow) {
@@ -187,6 +206,8 @@ export function DayScreen({ db }: DayScreenProps) {
 			handleComplete()
 		} else if (input === 'x') {
 			handleDelete()
+		} else if (input === 'w') {
+			handleStartEdit()
 		} else if (input === 'a') {
 			navigate('capture')
 		}
@@ -213,6 +234,36 @@ export function DayScreen({ db }: DayScreenProps) {
 
 	let displayIndex = 0
 
+	const renderTask = (task: Task) => {
+		const idx = displayIndex++
+		if (state.editingTaskId === task.id) {
+			return (
+				<Box key={task.id} flexDirection="column">
+					<Text dimColor>Reword:</Text>
+					<Box>
+						<Text color="cyan" bold>
+							{'> '}
+							{idx + 1}.{' '}
+						</Text>
+						<TextInput
+							value={editValue}
+							onChange={setEditValue}
+							onSubmit={handleSaveEdit}
+						/>
+					</Box>
+				</Box>
+			)
+		}
+		return (
+			<TaskListItem
+				key={task.id}
+				task={task}
+				index={idx}
+				selected={idx === selectedIndex}
+			/>
+		)
+	}
+
 	return (
 		<Box flexDirection="column" paddingY={1} paddingX={2}>
 			<Box marginBottom={1}>
@@ -225,17 +276,7 @@ export function DayScreen({ db }: DayScreenProps) {
 					<Text bold color="yellow">
 						Today
 					</Text>
-					{today.map((task) => {
-						const idx = displayIndex++
-						return (
-							<TaskListItem
-								key={task.id}
-								task={task}
-								index={idx}
-								selected={idx === selectedIndex}
-							/>
-						)
-					})}
+					{today.map(renderTask)}
 				</Box>
 			)}
 
@@ -244,17 +285,7 @@ export function DayScreen({ db }: DayScreenProps) {
 					<Text bold dimColor>
 						Later
 					</Text>
-					{later.map((task) => {
-						const idx = displayIndex++
-						return (
-							<TaskListItem
-								key={task.id}
-								task={task}
-								index={idx}
-								selected={idx === selectedIndex}
-							/>
-						)
-					})}
+					{later.map(renderTask)}
 				</Box>
 			)}
 

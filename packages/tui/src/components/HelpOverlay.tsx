@@ -29,8 +29,9 @@ function focusKeys(sym: Symbols): KeyBinding[] {
 	return [
 		{ key: 's', description: 'Skip / defer task' },
 		{ key: 'c', description: 'Complete task' },
-		{ key: 'u', description: 'Undo complete (within 5s)' },
-		{ key: '^u', description: 'Undo complete (during reflection)' },
+		{ key: 'w', description: 'Reword task' },
+		{ key: 'u', description: 'Undo (within 5s)' },
+		{ key: '^u', description: 'Undo (during reflection)' },
 		{ key: sym.enter, description: 'Start / stop task' },
 		{ key: 'd', description: 'View day' },
 		{ key: 'a', description: 'Add new task' },
@@ -42,7 +43,11 @@ function dayKeys(sym: Symbols): KeyBinding[] {
 		{ key: 'j / Down', description: 'Next task' },
 		{ key: 'k / Up', description: 'Previous task' },
 		{ key: sym.enter, description: 'Focus selected task' },
+		{ key: 'c', description: 'Complete task' },
+		{ key: 'w', description: 'Reword task' },
 		{ key: 'x', description: 'Delete task' },
+		{ key: 'u', description: 'Undo (within 5s)' },
+		{ key: 'a', description: 'Add new task' },
 	]
 }
 
