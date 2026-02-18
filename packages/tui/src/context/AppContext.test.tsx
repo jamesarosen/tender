@@ -9,7 +9,7 @@ function TestComponent() {
 	return (
 		<Text>
 			screen:{state.screen} task:{state.selectedTaskId ?? 'none'} modal:
-			{activeModal ?? 'none'}
+			{activeModal ?? 'none'} editing:{state.editingTaskId ?? 'none'}
 		</Text>
 	)
 }
@@ -91,6 +91,104 @@ describe('AppContext', () => {
 
 		await new Promise((r) => setTimeout(r, 50))
 		expect(frames.at(-1)).toContain('task:task-123')
+	})
+
+	it('manages editing state', async () => {
+		function EditingComponent() {
+			const { state, startEditing, stopEditing } = useApp()
+			const [step, setStep] = useState(0)
+
+			useEffect(() => {
+				if (step === 0) {
+					setStep(1)
+					startEditing('task-456')
+				} else if (step === 1) {
+					setStep(2)
+					stopEditing()
+				}
+			}, [step, startEditing, stopEditing])
+
+			return <Text>editing:{state.editingTaskId ?? 'none'}</Text>
+		}
+
+		const { frames } = render(
+			<AppProvider>
+				<EditingComponent />
+			</AppProvider>
+		)
+
+		await new Promise((r) => setTimeout(r, 50))
+		// Should have been set and then cleared
+		expect(frames.some((f) => f.includes('editing:task-456'))).toBe(true)
+		expect(frames.at(-1)).toContain('editing:none')
+	})
+
+	it('clears editing state on navigate', async () => {
+		function NavigateWhileEditing() {
+			const { state, startEditing, navigate } = useApp()
+			const [step, setStep] = useState(0)
+
+			useEffect(() => {
+				if (step === 0) {
+					setStep(1)
+					startEditing('task-789')
+				} else if (step === 1) {
+					setStep(2)
+					navigate('focus')
+				}
+			}, [step, startEditing, navigate])
+
+			return <Text>editing:{state.editingTaskId ?? 'none'}</Text>
+		}
+
+		const { frames } = render(
+			<AppProvider>
+				<NavigateWhileEditing />
+			</AppProvider>
+		)
+
+		await new Promise((r) => setTimeout(r, 50))
+		expect(frames.at(-1)).toContain('editing:none')
+	})
+
+	it('ignores SET_UNDO_REFLECTION_SIGNAL for reword undo', async () => {
+		function RewordUndoComponent() {
+			const { state, startUndo, setUndoReflectionSignal } = useApp()
+			const [step, setStep] = useState(0)
+
+			useEffect(() => {
+				if (step === 0) {
+					setStep(1)
+					startUndo(
+						{
+							kind: 'reword',
+							taskId: 'task-1',
+							previousDescription: 'old',
+						},
+						5
+					)
+				} else if (step === 1) {
+					setStep(2)
+					// This should be a no-op for reword undo
+					setUndoReflectionSignal('signal-1')
+				}
+			}, [step, startUndo, setUndoReflectionSignal])
+
+			const undo = state.undoAction
+			const hasReflection =
+				undo && undo.kind !== 'reword' ? undo.reflectionSignalId : 'none'
+			return <Text>reflection:{hasReflection ?? 'null'}</Text>
+		}
+
+		const { frames } = render(
+			<AppProvider>
+				<RewordUndoComponent />
+			</AppProvider>
+		)
+
+		await new Promise((r) => setTimeout(r, 50))
+		// reflection signal should not be set on reword undo
+		expect(frames.at(-1)).toContain('reflection:none')
 	})
 
 	it('manages modal stack', async () => {

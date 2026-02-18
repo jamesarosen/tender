@@ -20,6 +20,7 @@ export interface UseTasksResult {
 	startTask: (taskId: string) => Promise<void>
 	deleteTask: (taskId: string) => Promise<void>
 	undeleteTask: (taskId: string) => Promise<void>
+	rewordTask: (taskId: string, description: string) => Promise<void>
 }
 
 function toISO8601(date: Date): ISO8601 {
@@ -89,7 +90,6 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 					id,
 					template_id: null,
 					description,
-					// TODO: re-extract tags if task editing is added
 					tags: JSON.stringify(extractTags(description)),
 					preparation_notes: null,
 					due_at: dueAt ?? null,
@@ -180,6 +180,21 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		[db, refresh]
 	)
 
+	const rewordTask = useCallback(
+		async (taskId: string, description: string) => {
+			await db
+				.updateTable('tasks')
+				.set({
+					description,
+					tags: JSON.stringify(extractTags(description)),
+				})
+				.where('id', '=', taskId)
+				.execute()
+			await refresh()
+		},
+		[db, refresh]
+	)
+
 	return {
 		tasks,
 		loading,
@@ -190,6 +205,7 @@ export function useTasks(db: Kysely<Database>): UseTasksResult {
 		startTask,
 		deleteTask,
 		undeleteTask,
+		rewordTask,
 	}
 }
 
