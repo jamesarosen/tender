@@ -5,10 +5,12 @@ import type { Database, Task } from '@tender/db'
 import { recordSignal, deleteSignal } from '@tender/domain'
 import { getDegradedResponse, formatResponse } from '@tender/agent'
 import { TaskCard } from '#src/components/TaskCard.js'
+import { TextInput } from '#src/components/TextInput.js'
 import { Quote } from '#src/components/Quote.js'
 import { ReflectionPrompt as ReflectionPromptComponent } from '#src/components/ReflectionPrompt.js'
 import { useTasks, getTaskStats, type TaskStats } from '#src/hooks/useTasks.js'
 import { useReflection } from '#src/hooks/useReflection.js'
+import { useReword } from '#src/hooks/useReword.js'
 import { useApp } from '#src/context/AppContext.js'
 import { useSymbols } from '#src/symbols.js'
 import { getRandomQuote } from '#src/data/quotes.js'
@@ -23,8 +25,15 @@ export interface FocusScreenProps {
 }
 
 export function FocusScreen({ db }: FocusScreenProps) {
-	const { tasks, loading, completeTask, uncompleteTask, startTask, refresh } =
-		useTasks(db)
+	const {
+		tasks,
+		loading,
+		completeTask,
+		uncompleteTask,
+		startTask,
+		rewordTask,
+		refresh,
+	} = useTasks(db)
 	const {
 		navigate,
 		pushModal,
@@ -67,6 +76,20 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		setMessage(msg)
 		setTimeout(() => setMessage(null), 2000)
 	}, [])
+
+	// Ref to access undo action in callbacks without stale closures
+	const undoActionRef = useRef(state.undoAction)
+	useEffect(() => {
+		undoActionRef.current = state.undoAction
+	}, [state.undoAction])
+
+	const { editValue, setEditValue, handleStartEdit, handleSaveEdit, isEditing } =
+		useReword({
+			task: currentTask,
+			rewordTask,
+			showMessage,
+			undoActionRef,
+		})
 
 	const handleComplete = useCallback(async () => {
 		if (!currentTask || !taskStats) return
@@ -167,12 +190,6 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		})
 	}, [currentTask, startTask, db])
 
-	// Ref to access undo action in callbacks without stale closures
-	const undoActionRef = useRef(state.undoAction)
-	useEffect(() => {
-		undoActionRef.current = state.undoAction
-	}, [state.undoAction])
-
 	const handleReflectionSubmit = useCallback(
 		async (text: string) => {
 			const taskForReflection = reflectingTask?.task ?? currentTask
@@ -198,10 +215,11 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			dismissReflection()
 
 			// Start fresh undo countdown now that reflection is done
-			if (undoActionRef.current) {
+			const currentUndo = undoActionRef.current
+			if (currentUndo && currentUndo.kind !== 'reword') {
 				startUndo(
 					{
-						...undoActionRef.current,
+						...currentUndo,
 						reflectionSignalId: reflectionSignal.id,
 					},
 					5
@@ -234,21 +252,34 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		const undo = undoActionRef.current
 		if (!undo) return
 
-		await uncompleteTask(undo.taskId)
-		await deleteSignal(db, undo.signalId)
-		if (undo.reflectionSignalId) {
-			await deleteSignal(db, undo.reflectionSignalId)
+		if (undo.kind === 'reword') {
+			await rewordTask(undo.taskId, undo.previousDescription)
+		} else {
+			await uncompleteTask(undo.taskId)
+			await deleteSignal(db, undo.signalId)
+			if (undo.reflectionSignalId) {
+				await deleteSignal(db, undo.reflectionSignalId)
+			}
+			setReflectingTask(null)
+			dismissReflection()
+			selectTask(undo.taskId)
 		}
 
 		clearUndo()
-		setReflectingTask(null)
-		dismissReflection()
-		selectTask(undo.taskId)
 		showMessage('Restored')
-	}, [uncompleteTask, db, clearUndo, dismissReflection, selectTask, showMessage])
+	}, [
+		rewordTask,
+		uncompleteTask,
+		db,
+		clearUndo,
+		dismissReflection,
+		selectTask,
+		showMessage,
+	])
 
 	// Separate useInput for undo keys — not gated behind activePrompt
 	useInput((input, key) => {
+		if (isEditing) return
 		if (!state.undoAction) return
 
 		if (activePrompt) {
@@ -276,7 +307,8 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	}, [state.undoAction, state.undoSecondsLeft, activePrompt, tickUndo])
 
 	useInput((input, key) => {
-		// Don't handle keys when showing reflection prompt
+		// Don't handle keys when editing or showing reflection prompt
+		if (isEditing) return
 		if (activePrompt) return
 
 		if (input === 'c') {
@@ -285,6 +317,8 @@ export function FocusScreen({ db }: FocusScreenProps) {
 			handleSkip()
 		} else if (key.return) {
 			handleStart()
+		} else if (input === 'w') {
+			handleStartEdit()
 		} else if (input === 'd') {
 			navigate('day')
 		} else if (input === 'a') {
@@ -329,15 +363,26 @@ export function FocusScreen({ db }: FocusScreenProps) {
 	return (
 		<Box flexDirection="column" paddingY={1}>
 			<Quote quote={quote} />
-			<Box marginTop={1}>
-				<TaskCard
-					task={displayTask}
-					daysSinceCreated={displayStats?.daysSinceCreated}
-					showDetails={true}
-				/>
-			</Box>
+			{isEditing ? (
+				<Box paddingX={2} marginTop={1} flexDirection="column">
+					<Text dimColor>Reword:</Text>
+					<TextInput
+						value={editValue}
+						onChange={setEditValue}
+						onSubmit={handleSaveEdit}
+					/>
+				</Box>
+			) : (
+				<Box marginTop={1}>
+					<TaskCard
+						task={displayTask}
+						daysSinceCreated={displayStats?.daysSinceCreated}
+						showDetails={true}
+					/>
+				</Box>
+			)}
 
-			{displayTask.started_at && !reflectingTask && (
+			{displayTask.started_at && !reflectingTask && !isEditing && (
 				<Box justifyContent="center" marginTop={1}>
 					<Text color="green">In progress{sym.ellipsis}</Text>
 				</Box>

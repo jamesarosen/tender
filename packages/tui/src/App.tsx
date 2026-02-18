@@ -75,18 +75,22 @@ function StatusBarWithAvailability() {
 
 	// Different hints for different screens
 	let keyHints: string
-	switch (state.screen) {
-		case 'day':
-			keyHints = `[j/k] navigate | [${sym.enter}] focus | [c]omplete | [x] delete | [a]dd`
-			break
-		case 'capture':
-			keyHints = `[${sym.enter}] save | [${sym.tab}] due date | [${sym.esc}] cancel`
-			break
-		case 'focus':
-		case 'first-run':
-		default:
-			keyHints = '[s]kip | [c]omplete | [d]ay | [a]dd | [?]'
-			break
+	if (state.editingTaskId) {
+		keyHints = `[${sym.enter}] save | [${sym.esc}] cancel`
+	} else {
+		switch (state.screen) {
+			case 'day':
+				keyHints = `[j/k] navigate | [${sym.enter}] focus | [c]omplete | [x] delete | re[w]ord | [a]dd`
+				break
+			case 'capture':
+				keyHints = `[${sym.enter}] save | [${sym.tab}] due date | [${sym.esc}] cancel`
+				break
+			case 'focus':
+			case 'first-run':
+			default:
+				keyHints = '[s]kip | [c]omplete | re[w]ord | [d]ay | [a]dd | [?]'
+				break
+		}
 	}
 
 	return (

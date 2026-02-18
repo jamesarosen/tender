@@ -3,12 +3,18 @@ import { createContext, useContext, useReducer, type ReactNode } from 'react'
 export type Screen = 'focus' | 'day' | 'capture' | 'first-run'
 export type ModalType = 'help' | 'reflection'
 
-export interface UndoAction {
-	taskId: string
-	signalId: string
-	reflectionSignalId: string | null
-	kind: 'complete' | 'delete'
-}
+export type UndoAction =
+	| {
+			kind: 'complete' | 'delete'
+			taskId: string
+			signalId: string
+			reflectionSignalId: string | null
+	  }
+	| {
+			kind: 'reword'
+			taskId: string
+			previousDescription: string
+	  }
 
 export interface AppState {
 	screen: Screen
@@ -17,6 +23,7 @@ export interface AppState {
 	isFirstRun: boolean
 	undoAction: UndoAction | null
 	undoSecondsLeft: number
+	editingTaskId: string | null
 }
 
 type AppAction =
@@ -30,6 +37,8 @@ type AppAction =
 	| { type: 'TICK_UNDO' }
 	| { type: 'CLEAR_UNDO' }
 	| { type: 'SET_UNDO_REFLECTION_SIGNAL'; signalId: string }
+	| { type: 'START_EDITING'; taskId: string }
+	| { type: 'STOP_EDITING' }
 
 function appReducer(state: AppState, action: AppAction): AppState {
 	switch (action.type) {
@@ -40,6 +49,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				modalStack: [],
 				undoAction: null,
 				undoSecondsLeft: 0,
+				editingTaskId: null,
 			}
 		case 'SELECT_TASK':
 			return { ...state, selectedTaskId: action.taskId }
@@ -65,7 +75,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 		case 'CLEAR_UNDO':
 			return { ...state, undoAction: null, undoSecondsLeft: 0 }
 		case 'SET_UNDO_REFLECTION_SIGNAL':
-			if (!state.undoAction) return state
+			if (!state.undoAction || state.undoAction.kind === 'reword') return state
 			return {
 				...state,
 				undoAction: {
@@ -73,6 +83,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
 					reflectionSignalId: action.signalId,
 				},
 			}
+		case 'START_EDITING':
+			return { ...state, editingTaskId: action.taskId }
+		case 'STOP_EDITING':
+			return { ...state, editingTaskId: null }
 		default:
 			return state
 	}
@@ -90,6 +104,8 @@ interface AppContextValue {
 	tickUndo: () => void
 	clearUndo: () => void
 	setUndoReflectionSignal: (signalId: string) => void
+	startEditing: (taskId: string) => void
+	stopEditing: () => void
 	activeModal: ModalType | null
 }
 
@@ -113,6 +129,7 @@ export function AppProvider({
 		isFirstRun,
 		undoAction: null,
 		undoSecondsLeft: 0,
+		editingTaskId: null,
 	})
 
 	const value: AppContextValue = {
@@ -129,6 +146,8 @@ export function AppProvider({
 		clearUndo: () => dispatch({ type: 'CLEAR_UNDO' }),
 		setUndoReflectionSignal: (signalId) =>
 			dispatch({ type: 'SET_UNDO_REFLECTION_SIGNAL', signalId }),
+		startEditing: (taskId) => dispatch({ type: 'START_EDITING', taskId }),
+		stopEditing: () => dispatch({ type: 'STOP_EDITING' }),
 		activeModal: state.modalStack[state.modalStack.length - 1] ?? null,
 	}
 
