@@ -1,0 +1,19 @@
+{
+	"name": "@tender/mcp",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"description": "MCP server for LLM access to Tender data",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.26.0",
+		"@tender/config": "workspace:*",
+		"@tender/db": "workspace:*",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"vitest": "^4.0.16"
+	}
+}
