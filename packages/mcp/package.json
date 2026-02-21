@@ -8,6 +8,7 @@
 		".": "./src/index.ts"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.17.0",
 		"@modelcontextprotocol/sdk": "^1.26.0",
 		"@tender/config": "workspace:*",
 		"@tender/db": "workspace:*",

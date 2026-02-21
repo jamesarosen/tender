@@ -6,7 +6,7 @@
  */
 
 import { getDatabasePath } from '@tender/config'
-import { createDatabase, createReadonlyClient } from '@tender/db'
+import { openDatabase, createReadonlyClient } from '@tender/db'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerResources } from './resources.js'
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 
 	let connection
 	try {
-		connection = await createDatabase(dbPath)
+		connection = await openDatabase(dbPath)
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err)
 		console.error(
@@ -31,14 +31,6 @@ async function main(): Promise<void> {
 		process.exit(1)
 	}
 	console.error(`${LOG_PREFIX} database ready`)
-
-	const shutdown = () => {
-		console.error(`${LOG_PREFIX} shutting down`)
-		connection.close()
-		process.exit(0)
-	}
-	process.on('SIGTERM', shutdown)
-	process.on('SIGINT', shutdown)
 
 	const server = new McpServer({
 		name: 'tender',
@@ -53,6 +45,16 @@ async function main(): Promise<void> {
 	const transport = new StdioServerTransport()
 	await server.connect(transport)
 	console.error(`${LOG_PREFIX} connected via stdio`)
+
+	const shutdown = () => {
+		console.error(`${LOG_PREFIX} shutting down`)
+		server.close().finally(() => {
+			connection.close()
+			process.exit(0)
+		})
+	}
+	process.on('SIGTERM', shutdown)
+	process.on('SIGINT', shutdown)
 }
 
 main().catch((err) => {

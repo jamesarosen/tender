@@ -1,5 +1,6 @@
 import { describe, expect, afterEach } from 'vitest'
 import { test } from '@tender/db/test-setup'
+import { createReadonlyClient } from '@tender/db'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
@@ -7,7 +8,8 @@ import { registerResources } from './resources.js'
 
 async function setup(getClient: () => import('@libsql/client').Client) {
 	const server = new McpServer({ name: 'test', version: '0.0.1' })
-	registerResources(server, getClient)
+	const readonlyClient = createReadonlyClient(getClient())
+	registerResources(server, () => readonlyClient)
 
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
 	const client = new Client({ name: 'test-client', version: '0.0.1' })

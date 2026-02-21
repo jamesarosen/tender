@@ -2,6 +2,7 @@ export { createReadonlyClient, ReadonlyViolationError } from './readonly.js'
 export {
 	createDatabase,
 	createKysely,
+	openDatabase,
 	type DatabaseConnection,
 } from './database.js'
 

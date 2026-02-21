@@ -49,14 +49,15 @@ export interface DatabaseConnection {
 }
 
 /**
- * Creates a database connection with migrations applied.
+ * Opens a database connection without running migrations.
+ *
+ * Use this for read-only consumers (e.g., MCP server) that should
+ * not attempt schema changes.
  *
  * @param path - Database path (e.g., './data.db' or ':memory:')
  * @returns Connection with both raw client and typed Kysely instance
  */
-export async function createDatabase(
-	path: string
-): Promise<DatabaseConnection> {
+export async function openDatabase(path: string): Promise<DatabaseConnection> {
 	const url = toLibsqlUrl(path)
 	const client = createClient({ url })
 
@@ -64,16 +65,6 @@ export async function createDatabase(
 	await client.execute('PRAGMA foreign_keys = ON')
 
 	const db = createKysely(client)
-	const migrator = new Migrator({
-		db,
-		provider: new InlineMigrationProvider(),
-	})
-
-	const { error } = await migrator.migrateToLatest()
-	if (error) {
-		client.close()
-		throw error
-	}
 
 	return {
 		client,
@@ -82,4 +73,29 @@ export async function createDatabase(
 			client.close()
 		},
 	}
+}
+
+/**
+ * Creates a database connection with migrations applied.
+ *
+ * @param path - Database path (e.g., './data.db' or ':memory:')
+ * @returns Connection with both raw client and typed Kysely instance
+ */
+export async function createDatabase(
+	path: string
+): Promise<DatabaseConnection> {
+	const connection = await openDatabase(path)
+
+	const migrator = new Migrator({
+		db: connection.db,
+		provider: new InlineMigrationProvider(),
+	})
+
+	const { error } = await migrator.migrateToLatest()
+	if (error) {
+		connection.close()
+		throw error
+	}
+
+	return connection
 }
