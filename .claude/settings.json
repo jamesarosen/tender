@@ -23,6 +23,11 @@
 		]
 	},
 	"permissions": {
-		"allow": ["Bash(./bin/*)", "Bash(bin/*)", "mcp__context7__query-docs"]
+		"allow": [
+			"Bash(./bin/*)",
+			"Bash(bin/*)",
+			"mcp__context7__query-docs",
+			"mcp__tender__*"
+		]
 	}
 }

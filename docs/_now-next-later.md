@@ -4,6 +4,10 @@
 
 # Next
 
+- Harden `createReadonlyClient`: writable CTEs (`WITH x AS (DELETE …)`) and
+  `REPLACE INTO` bypass the regex denylist. Either scan full SQL for write
+  keywords or switch to native `?mode=ro` once libsql supports it.
+  See `packages/db/src/readonly.ts` TODO.
 - Evals framework
 - Continuously refine prioritization algorithm / prompt
 - Identify patterns in agentic SQL. Write views, functions, macros to guide it

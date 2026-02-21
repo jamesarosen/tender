@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"tender": {
+			"command": "pnpm",
+			"args": ["exec", "tsx", "packages/mcp/src/index.ts"]
+		}
+	}
+}
