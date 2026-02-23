@@ -95,13 +95,63 @@ describe('parseTagSegments', () => {
 		])
 	})
 
-	it('does not split URL fragments', () => {
+	it('does not split URL fragments into tags', () => {
 		expect(parseTagSegments('See https://example.com#section')).toEqual([
-			{ type: 'text', value: 'See https://example.com#section' },
+			{ type: 'text', value: 'See ' },
+			{ type: 'url', value: 'https://example.com#section' },
 		])
 	})
 
 	it('returns empty array for empty string', () => {
 		expect(parseTagSegments('')).toEqual([])
+	})
+
+	it('detects a URL as a url segment', () => {
+		expect(parseTagSegments('See https://example.com')).toEqual([
+			{ type: 'text', value: 'See ' },
+			{ type: 'url', value: 'https://example.com' },
+		])
+	})
+
+	it('detects http URLs', () => {
+		expect(parseTagSegments('Visit http://example.com')).toEqual([
+			{ type: 'text', value: 'Visit ' },
+			{ type: 'url', value: 'http://example.com' },
+		])
+	})
+
+	it('strips trailing punctuation from URLs', () => {
+		expect(parseTagSegments('See https://example.com.')).toEqual([
+			{ type: 'text', value: 'See ' },
+			{ type: 'url', value: 'https://example.com' },
+			{ type: 'text', value: '.' },
+		])
+	})
+
+	it('handles URL with path and query', () => {
+		expect(
+			parseTagSegments('Check https://github.com/user/repo/issues/123?q=open')
+		).toEqual([
+			{ type: 'text', value: 'Check ' },
+			{
+				type: 'url',
+				value: 'https://github.com/user/repo/issues/123?q=open',
+			},
+		])
+	})
+
+	it('handles a URL followed by a tag', () => {
+		expect(parseTagSegments('See https://example.com #errand')).toEqual([
+			{ type: 'text', value: 'See ' },
+			{ type: 'url', value: 'https://example.com' },
+			{ type: 'text', value: ' ' },
+			{ type: 'tag', value: '#errand' },
+		])
+	})
+
+	it('handles a URL as the entire description', () => {
+		expect(parseTagSegments('https://example.com')).toEqual([
+			{ type: 'url', value: 'https://example.com' },
+		])
 	})
 })

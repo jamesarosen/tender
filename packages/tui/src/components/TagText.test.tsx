@@ -43,4 +43,21 @@ describe('TagText', () => {
 		expect(lastFrame()).toContain('#errand')
 		expect(lastFrame()).toContain('milk')
 	})
+
+	it('renders URLs', () => {
+		const { lastFrame } = render(
+			<TagText>See https://example.com for details</TagText>
+		)
+		expect(lastFrame()).toContain('See')
+		expect(lastFrame()).toContain('https://example.com')
+		expect(lastFrame()).toContain('for details')
+	})
+
+	it('renders URLs alongside tags', () => {
+		const { lastFrame } = render(
+			<TagText>Check https://example.com #errand</TagText>
+		)
+		expect(lastFrame()).toContain('https://example.com')
+		expect(lastFrame()).toContain('#errand')
+	})
 })

@@ -20,5 +20,5 @@ export {
 	type RecordSignalOptions,
 } from './signals.js'
 
-// Tag extraction
+// Tag and URL extraction
 export { extractTags, parseTagSegments, type TagSegment } from './tags.js'
