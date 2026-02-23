@@ -232,9 +232,10 @@ This tells SQLite to use a read transaction. However:
 
 ## Risks & Mitigations
 
-| Risk                               | Mitigation                                          |
-| ---------------------------------- | --------------------------------------------------- |
-| SQL injection through CTE/subquery | Block dangerous keywords everywhere, not just start |
-| Slow queries DoS                   | Add timeout (handled in tool, not spike)            |
-| Large result sets                  | Add row limit (handled in tool, not spike)          |
-| Proxy overhead                     | Benchmark (likely negligible for query workloads)   |
+| Risk                               | Mitigation                                                 |
+| ---------------------------------- | ---------------------------------------------------------- |
+| SQL injection through CTE/subquery | Block dangerous keywords everywhere, not just start        |
+| Slow queries DoS                   | Add timeout (handled in tool, not spike)                   |
+| Large result sets                  | Add row limit (handled in tool, not spike)                 |
+| Proxy overhead                     | Benchmark (likely negligible for query workloads)          |
+| Agent SQL errors                   | Fallback to a known-good safe query (graceful degradation) |
