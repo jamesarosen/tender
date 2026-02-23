@@ -9,6 +9,7 @@ import { TextInput } from '#src/components/TextInput.js'
 import { useTasks } from '#src/hooks/useTasks.js'
 import { useReword } from '#src/hooks/useReword.js'
 import { useApp } from '#src/context/AppContext.js'
+import { hasModifier } from '#src/hooks/useKeymap.js'
 import { useSymbols } from '#src/symbols.js'
 
 export interface DayScreenProps {
@@ -175,8 +176,9 @@ export function DayScreen({ db }: DayScreenProps) {
 	}, [rewordTask, undeleteTask, uncompleteTask, db, clearUndo, showMessage])
 
 	// Undo key handler
-	useInput((input) => {
+	useInput((input, key) => {
 		if (isEditing) return
+		if (hasModifier(key)) return
 		if (!state.undoAction) return
 		if (input === 'u') {
 			handleUndo()
@@ -198,10 +200,12 @@ export function DayScreen({ db }: DayScreenProps) {
 		if (isEditing) return
 		if (key.return) {
 			handleSelect()
-		} else if (input === 'j' || key.downArrow) {
+		} else if (key.downArrow || (!hasModifier(key) && input === 'j')) {
 			setSelectedIndex((i) => Math.min(i + 1, visibleTasks.length - 1))
-		} else if (input === 'k' || key.upArrow) {
+		} else if (key.upArrow || (!hasModifier(key) && input === 'k')) {
 			setSelectedIndex((i) => Math.max(i - 1, 0))
+		} else if (hasModifier(key)) {
+			return
 		} else if (input === 'c') {
 			handleComplete()
 		} else if (input === 'x') {

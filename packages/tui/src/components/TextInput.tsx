@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Text, useInput } from 'ink'
+import { hasModifier } from '#src/hooks/useKeymap.js'
 
 interface CursorProps {
 	active: boolean
@@ -56,8 +57,7 @@ export function TextInput({
 				return
 			}
 
-			// Ignore control characters
-			if (key.ctrl || key.meta) return
+			if (hasModifier(key)) return
 
 			// Add printable characters
 			if (input && input.length === 1) {
