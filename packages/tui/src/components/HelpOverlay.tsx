@@ -1,4 +1,5 @@
 import { Box, Text, useInput } from 'ink'
+import { hasModifier } from '#src/hooks/useKeymap.js'
 import { useSymbols, type Symbols } from '#src/symbols.js'
 
 export interface HelpOverlayProps {
@@ -7,7 +8,9 @@ export interface HelpOverlayProps {
 
 function useHelpInput(onClose: () => void) {
 	useInput((input, key) => {
-		if (key.escape || input === '?') {
+		if (key.escape) {
+			onClose()
+		} else if (!hasModifier(key) && input === '?') {
 			onClose()
 		}
 	})

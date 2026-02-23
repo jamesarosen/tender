@@ -12,6 +12,7 @@ import { useTasks, getTaskStats, type TaskStats } from '#src/hooks/useTasks.js'
 import { useReflection } from '#src/hooks/useReflection.js'
 import { useReword } from '#src/hooks/useReword.js'
 import { useApp } from '#src/context/AppContext.js'
+import { hasModifier } from '#src/hooks/useKeymap.js'
 import { useSymbols } from '#src/symbols.js'
 import { getRandomQuote } from '#src/data/quotes.js'
 
@@ -288,8 +289,8 @@ export function FocusScreen({ db }: FocusScreenProps) {
 				handleUndo()
 			}
 		} else {
-			// Normal mode: u to undo
-			if (input === 'u') {
+			// Normal mode: u to undo (no modifiers)
+			if (!hasModifier(key) && input === 'u') {
 				handleUndo()
 			}
 		}
@@ -311,12 +312,14 @@ export function FocusScreen({ db }: FocusScreenProps) {
 		if (isEditing) return
 		if (activePrompt) return
 
-		if (input === 'c') {
+		if (key.return) {
+			handleStart()
+		} else if (hasModifier(key)) {
+			return
+		} else if (input === 'c') {
 			handleComplete()
 		} else if (input === 's') {
 			handleSkip()
-		} else if (key.return) {
-			handleStart()
 		} else if (input === 'w') {
 			handleStartEdit()
 		} else if (input === 'd') {
