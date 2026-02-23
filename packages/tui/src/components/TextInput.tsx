@@ -59,9 +59,10 @@ export function TextInput({
 
 			if (hasModifier(key)) return
 
-			// Add printable characters
-			if (input && input.length === 1) {
-				onChange(value + input)
+			// Accept printable characters; handles paste (multi-char) by collapsing newlines to spaces
+			if (input) {
+				const cleaned = input.replace(/[\r\n]+/g, ' ')
+				onChange(value + cleaned)
 			}
 		},
 		{ isActive: focus }
