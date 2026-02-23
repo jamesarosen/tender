@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Text } from 'ink'
 import { parseTagSegments } from '@tender/domain'
+import { colors } from '#src/theme.js'
 
 /**
  * Terminal-safe tag colors. These 6 ANSI colors remain readable
@@ -37,8 +38,9 @@ export interface TagTextProps {
 }
 
 /**
- * Renders a description string with inline #tags highlighted in stable colors.
- * Non-tag text inherits parent styling; tags get their hash-based color.
+ * Renders a description string with inline #tags highlighted in stable colors
+ * and URLs rendered bold, underlined, and colored. Non-tag/URL text inherits
+ * parent styling.
  */
 export function TagText({ children, bold }: TagTextProps) {
 	const segments = useMemo(() => parseTagSegments(children), [children])
@@ -60,6 +62,11 @@ export function TagText({ children, bold }: TagTextProps) {
 						color={tagColor(seg.value.slice(1))}
 						bold={false}
 					>
+						{seg.value}
+					</Text>
+				) : seg.type === 'url' ? (
+					// Always bold so URLs stand out, regardless of parent bold state
+					<Text key={`${seg.type}-${i}`} bold color={colors.link} underline>
 						{seg.value}
 					</Text>
 				) : (

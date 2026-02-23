@@ -8,6 +8,8 @@
 export const colors = {
 	/** Interactive elements: key hints, tags, prompts */
 	interactive: 'cyan',
+	/** Hyperlinks in task descriptions */
+	link: 'blue',
 	/** Success or active state */
 	success: 'green',
 	/** Time-sensitive or attention-needed state */
